@@ -4,6 +4,7 @@
 
 package frc.robot.subsystems;
 
+import com.fasterxml.jackson.databind.deser.SettableBeanProperty;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 
@@ -18,38 +19,51 @@ public class ArmSubsystem extends SubsystemBase {
   private final CANSparkMax rightMotor = new CANSparkMax(ArmConstants.RIGHT_ARM_PORT, MotorType.kBrushless);
   private final DutyCycleEncoder throughboreEncoder = new DutyCycleEncoder(0);
 
+  private final double maxAngle = 40.0;
+  private final double minAngle = -63.0;
+  private final double angleOffset = 215.0;
+  private double kp = 0.0;
+  private double minPowerAtLevel = 0.0;
+  private final PIDController pid = new PIDController(kp, 0.0, 0.0);
+  private double setpoint;
+  private boolean usingPID = false;
+  private double setpointIncrementer = 0.5;
+  private double motorOutput = 0.0;
+  private boolean settingMinLevel = true;
+
   public ArmSubsystem() {
     leftMotor.setInverted(false);
     rightMotor.follow(leftMotor, true);
   
+    SmartDashboard.putNumber("arm min power to hold level", minPowerAtLevel);
+    SmartDashboard.putNumber("arm kp", kp);
   }
 
-  private final double maxAngle = 40.0;
-  private final double minAngle = -60.0;
-  private final double angleOffset = 215.0;
-  private final double kp = 0.04;
-  private final double minPowerAtLevel = 0.3;
-  private final PIDController pid = new PIDController(kp, 0.0, 0.0);
-  private double setpoint;
-
   public void raise() {
-    leftMotor.set(0.2);
+    if (usingPID) {
+      setSetpoint(setpoint += setpointIncrementer);
+    } else {
+      motorOutput = 0.2;
     }
+  }
 
   public void lower() {
-    leftMotor.set(-0.2);
+    if (usingPID) {
+      setSetpoint(setpoint -= setpointIncrementer);
+    } else {
+      motorOutput = -0.2;
+    }
   }
 
   public void stop() {
-    leftMotor.set(0.0);
+    motorOutput = 0.0;
   }
-
 
   public double getFeedForward() {
-    return  Math.cos(Math.toRadians(getDegrees()))*minPowerAtLevel;
+    return Math.cos(Math.toRadians(getDegrees()))*minPowerAtLevel;
   }
 
-  public double getPower() {
+  public double getPidOutput() {
     return pid.calculate(getDegrees(), setpoint)+getFeedForward();
   }
 
@@ -57,31 +71,38 @@ public class ArmSubsystem extends SubsystemBase {
     return throughboreEncoder.get()*360.0-angleOffset;
   }
 
-  public void EncoderSubsystem() {
-    setpoint = getDegrees();
-    SmartDashboard.putNumber("Setpoint", setpoint);
-  }
-
-  public void raiseSetpoint() {
-    setpoint += 0.5;
-  }
-  public void lowerSetpoint() {
-    setpoint -= 0.5;
-  }
-  public void setSetpoint(int point) {
-    setpoint = point;
+  public void setSetpoint(double newSetpoint) {
+    if (newSetpoint > maxAngle) {
+      newSetpoint = maxAngle;
+    } else if (newSetpoint < minAngle) {
+      newSetpoint = minAngle;
+    } else {
+      setpoint = newSetpoint;
+    }
+    SmartDashboard.putNumber("arm setpoint", setpoint);
   }
   
   @Override
   public void periodic() {
-    getDegrees();
-    SmartDashboard.putNumber("Throughbore encoder value", -getDegrees() - 130);
-    SmartDashboard.putBoolean("Within range up", getDegrees() >= maxAngle);
-    SmartDashboard.putBoolean("Within range down", getDegrees() <= minAngle);
-    SmartDashboard.putNumber("Power output", getPower());
-    setpoint = SmartDashboard.getNumber("Setpoint", setpoint);
-    SmartDashboard.putNumber("Feed forward", getFeedForward());
-    SmartDashboard.putNumber("Math.cos*getdegrees", Math.cos(Math.toRadians(getDegrees())));
+    SmartDashboard.putNumber("arm throughbore encoder value", -getDegrees() - 130);
+    SmartDashboard.putBoolean("arm within range up", getDegrees() >= maxAngle);
+    SmartDashboard.putBoolean("arm within range down", getDegrees() <= minAngle);
+    SmartDashboard.putNumber("arm power output", getPidOutput());
+    setSetpoint(SmartDashboard.getNumber("arm setpoint", setpoint));
+    SmartDashboard.putNumber("arm feed forward", getFeedForward());
+    SmartDashboard.putNumber("arm Math.cos*getdegrees", Math.cos(Math.toRadians(getDegrees())));
+    minPowerAtLevel = SmartDashboard.getNumber("arm min power to hold level", minPowerAtLevel);
+    kp = SmartDashboard.getNumber("arm kp", kp);
+    pid.setP(kp);
+
+    if (usingPID) {
+      leftMotor.set(getPidOutput());
+    } else {
+      if (settingMinLevel) motorOutput = minPowerAtLevel;
+      leftMotor.set(motorOutput);
+    }
+
     
+
   }
 }

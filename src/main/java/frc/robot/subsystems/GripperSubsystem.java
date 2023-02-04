@@ -8,19 +8,18 @@ import com.revrobotics.CANSparkMax;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 
+import edu.wpi.first.wpilibj.DutyCycleEncoder;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 
 public class GripperSubsystem extends SubsystemBase {
 
   CANSparkMax motor1 = new CANSparkMax(Constants.GripperConstants.GRIPPER_MOTOR_PORT, MotorType.kBrushless);
-  RelativeEncoder motor1Encoder = motor1.getEncoder();
+  DutyCycleEncoder encoder1 = new DutyCycleEncoder(1);
+  double angleOffset = 0;
 
   public GripperSubsystem() {}
-
-  @Override
-  public void periodic() {
-  }
 
   public void open() {
     motor1.set(0.2);
@@ -31,5 +30,12 @@ public class GripperSubsystem extends SubsystemBase {
   public void stop() {
     motor1.set(0);
   }
-
+  public double getDegrees() {
+    return encoder1.get()*360-angleOffset;
+  }
+  @Override
+  public void periodic() {
+    SmartDashboard.putNumber("Throughbore encoder value", getDegrees());
+  }
 }
+

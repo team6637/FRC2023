@@ -13,9 +13,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.ExtenderConstants;
 
 public class ExtenderSubsystem extends SubsystemBase {
-  private final CANSparkMax motor = new CANSparkMax(ExtenderConstants.LEFT_EXTENDER_PORT, MotorType.kBrushless);
-
-  private final DutyCycleEncoder encoder = new DutyCycleEncoder(ArmConstants.ENCODER_PORT);
+  private final CANSparkMax motor = new CANSparkMax(ExtenderConstants.EXTENDER_PORT, MotorType.kBrushless);
 
   final int maxLength = 10000;
   final int leastLength = 0;
@@ -23,18 +21,10 @@ public class ExtenderSubsystem extends SubsystemBase {
   public ExtenderSubsystem() {}
 
   public void extend() {
-    if(encoder.get() <= maxLength) {
-      motor.set(0.2);
-    } else {
-      motor.set(0);
-    }
+      motor.set(0.8);
   }
   public void retract() {
-    if(encoder.get() <= maxLength) {
-      motor.set(-0.2);
-    } else {
-      motor.set(0);
-    }
+      motor.set(-0.8);
   }
 
   public void stop() {

@@ -4,35 +4,28 @@
 
 package frc.robot.subsystems;
 
-// import com.revrobotics.Rev2mDistanceSensor;
-// import com.revrobotics.Rev2mDistanceSensor.Port;
+import com.revrobotics.Rev2mDistanceSensor;
+import com.revrobotics.Rev2mDistanceSensor.Port;
 
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class DistanceSensorSubsystem extends SubsystemBase {
   
-  // private final Rev2mDistanceSensor armDistanceSensor;
+  private final Rev2mDistanceSensor distanceSensor;
 
-  // private final double maxAngle = 40.0;
-  // private final double minAngle = -60.0;
-  // private final double angleOffset = 215.0;
-  // private final double kp = 0.04;
+  public DistanceSensorSubsystem() {
 
-  // public DistanceSensorSubsystem() {
+    distanceSensor = new Rev2mDistanceSensor(Port.kOnboard);
 
-  //   armDistanceSensor = new Rev2mDistanceSensor(Port.kOnboard);
+  }
 
-  // }
+  public double getSensorValue() {
+    return distanceSensor.getRange();
+  }
 
-  // public double getArmSensorValue() {
-  //   double v = armDistanceSensor.getRange();
-  //   if(v < minAngle) v = minAngle;
-  //   return v;
-  // }
-
-  // @Override
-  // public void periodic() {
-  //   SmartDashboard.putNumber("sensor range", getArmSensorValue());
-  // }
+  @Override
+  public void periodic() {
+    SmartDashboard.putNumber("sensor range", getSensorValue());
+  }
 }
