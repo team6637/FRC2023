@@ -14,17 +14,20 @@ import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.RunCommand;
+import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
+import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
+import edu.wpi.first.wpilibj2.command.button.POVButton;
 
 public class RobotContainer {
 
     private final Swerve m_swerve = new Swerve();
-    private final ArmSubsystem m_armSubsystem = new ArmSubsystem();
-    //private final ExtenderSubsystem m_extenderSubsystem = new ExtenderSubsystem();
+    private final ExtenderSubsystem m_extenderSubsystem = new ExtenderSubsystem();
+    private final ArmSubsystem m_armSubsystem = new ArmSubsystem(m_extenderSubsystem);
     private final LimelightSubsystem m_limelightSubsystem = new LimelightSubsystem();
-    //private final GripperSubsystem m_gripperSubsystem = new GripperSubsystem();
-
-    private final Joystick m_joystick = new Joystick(0);
+    private final GripperSubsystem m_gripperSubsystem = new GripperSubsystem();
+    private final Joystick driverStick = new Joystick(0);
+    private final Joystick controlStick = new Joystick(1);
 
 
     public RobotContainer() {
@@ -32,9 +35,11 @@ public class RobotContainer {
         m_swerve.setDefaultCommand(
             new SwerveTeleopCommand(
                 m_swerve,
-                () -> m_joystick.getY(),
-                () -> m_joystick.getX(),
-                () -> m_joystick.getTwist()
+                () -> -driverStick.getY(),
+                () -> -driverStick.getX(),
+                () -> -driverStick.getTwist(),
+                () -> m_limelightSubsystem.getTx(),
+                () -> driveInversionMultiplier()
             )
         );
         
@@ -42,20 +47,87 @@ public class RobotContainer {
     }
 
     private void configureButtonBindings() {
-        // new JoystickButton(m_joystick, 6).whileTrue(new RunCommand(() -> m_extenderSubsystem.extend())).onFalse(new InstantCommand(() -> m_extenderSubsystem.stop()));
 
-        // new JoystickButton(m_joystick, 9).whileTrue(new RunCommand(() -> m_extenderSubsystem.retract())).onFalse(new InstantCommand(() -> m_extenderSubsystem.stop()));
+        // EXTENDER
+        new JoystickButton(driverStick, 6).whileTrue(new RunCommand(() -> m_extenderSubsystem.extend())).onFalse(new InstantCommand(() -> m_extenderSubsystem.stop()));
 
-        new JoystickButton(m_joystick, 7).whileTrue(new RunCommand(() -> m_armSubsystem.raise())).onFalse(new InstantCommand(() -> m_armSubsystem.stop()));
+        new JoystickButton(driverStick, 9).whileTrue(new RunCommand(() -> m_extenderSubsystem.retract())).onFalse(new InstantCommand(() -> m_extenderSubsystem.stop()));
 
-        new JoystickButton(m_joystick, 8).whileTrue(new RunCommand(() -> m_armSubsystem.lower())).onFalse(new InstantCommand(() -> m_armSubsystem.stop()));
+        // ARM
+        new JoystickButton(driverStick, 5).whileTrue(new RunCommand(() -> m_armSubsystem.raise())).onFalse(new InstantCommand(() -> m_armSubsystem.stop()));
 
-        new JoystickButton(m_joystick, 2).whileTrue(new InstantCommand(() -> m_armSubsystem.setSetpoint(0.0)));
+        new JoystickButton(driverStick, 10).whileTrue(new RunCommand(() -> m_armSubsystem.lower())).onFalse(new InstantCommand(() -> m_armSubsystem.stop()));
 
-        // new JoystickButton(m_joystick, 5).whileTrue(new RunCommand(() -> m_gripperSubsystem.open())).onFalse(new InstantCommand(() -> m_gripperSubsystem.stop()));
+        // RESET
+        new JoystickButton(controlStick, 11).onTrue(new SequentialCommandGroup(
+            new InstantCommand(() -> m_gripperSubsystem.setSetpoint(Constants.GripperConstants.closeCone)),
+            new InstantCommand(() ->  m_extenderSubsystem.setSetpoint(0)),
+            new WaitUntilCommand(() -> m_extenderSubsystem.atSetpoint()),
+            new InstantCommand(() -> m_armSubsystem.setSetpoint(Constants.ArmConstants.minAngle)),
+            new WaitUntilCommand(() -> m_armSubsystem.atSetpoint()),
+            new InstantCommand(() -> m_gripperSubsystem.setSetpoint(Constants.GripperConstants.fullOpen))
+        ));
 
-        // new JoystickButton(m_joystick, 10).whileTrue(new RunCommand(() -> m_gripperSubsystem.close())).onFalse(new InstantCommand(() -> m_gripperSubsystem.stop()));
+        // SET MID
+        new JoystickButton(controlStick, 9).onTrue(new SequentialCommandGroup(
+            new InstantCommand(() ->  m_armSubsystem.setSetpoint(20)),
+            new WaitUntilCommand(() -> m_armSubsystem.atSetpoint()),
+            new InstantCommand(() -> m_extenderSubsystem.setSetpoint(17.5))
+        ));
 
+        // SET HIGH
+        new JoystickButton(controlStick, 7).onTrue(new SequentialCommandGroup(
+            new InstantCommand(() ->  m_armSubsystem.setSetpoint(26.8)),
+            new WaitUntilCommand(() -> m_armSubsystem.atSetpoint()),
+            new InstantCommand(() -> m_extenderSubsystem.setSetpoint(155))
+        ));
+
+        // GRIPPER
+        new JoystickButton(driverStick, 1).whileTrue(new RunCommand(() -> m_gripperSubsystem.closeGripper()));
+
+        new JoystickButton(driverStick, 3).whileTrue(new InstantCommand(() -> m_gripperSubsystem.setSetpoint(Constants.GripperConstants.fullOpen)));
+
+        new JoystickButton(driverStick, 2).onTrue(new InstantCommand(() -> m_gripperSubsystem.setSetpoint(Constants.GripperConstants.closeCone)));
+
+        new JoystickButton(driverStick, 4).onTrue(new InstantCommand(() -> m_gripperSubsystem.setSetpoint(Constants.GripperConstants.closeCube)));
+
+        // LIMELIGHT
+        // Object Detection
+        new JoystickButton(driverStick, 8).whileTrue(new RunCommand(() -> m_limelightSubsystem.setVisionMode("object"))).onFalse(new InstantCommand(() -> m_limelightSubsystem.setVisionMode("off")));
+
+        // April Tag & Reflective Tape Detection
+        new JoystickButton(driverStick, 7).whileTrue(new RunCommand(() -> m_limelightSubsystem.setVisionMode("april"))).onFalse(new InstantCommand(() -> m_limelightSubsystem.setVisionMode("off")));
+
+        // POV fine control
+        new POVButton(driverStick, 0).whileTrue(new RunCommand(() -> m_extenderSubsystem.extend()));
+
+        new POVButton(driverStick, 180).whileTrue(new RunCommand(() -> m_extenderSubsystem.retract()));
+
+        new POVButton(driverStick, 270).whileTrue(new SwerveTeleopCommand(
+            m_swerve,
+            () -> 0.0,
+            () -> 0.45,
+            () -> 0.0,
+            () -> 0.0,
+            () -> driveInversionMultiplier()
+        ));
+
+        new POVButton(driverStick, 90).whileTrue(new SwerveTeleopCommand(
+            m_swerve,
+            () -> 0.0,
+            () -> -0.45,
+            () -> 0.0,
+            () -> 0.0,
+            () -> driveInversionMultiplier()
+        ));
+    }
+
+    public Double driveInversionMultiplier() {
+        if(driverStick.getThrottle() < 0) { // new joystick up is -1.0
+            return 1.0;
+        } else {
+            return -1.0;
+        } 
     }
 
     public Command getAutonomousCommand() {

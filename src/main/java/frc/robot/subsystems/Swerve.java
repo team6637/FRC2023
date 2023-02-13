@@ -6,10 +6,13 @@ package frc.robot.subsystems;
 
 import com.ctre.phoenix.sensors.Pigeon2;
 
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
+import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
+import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
+import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
@@ -49,26 +52,31 @@ public class Swerve extends SubsystemBase {
   );
 
   // GYRO
-  private final Pigeon2 m_pigeon = new Pigeon2(9, "Gary");
+  private final Pigeon2 gyro;
+
+  private Field2d field;
+  
+  // ODOMETER
+  private SwerveDriveOdometry odometry;
 
   public Swerve() {
-    new Thread(() -> {
-      try {
-        Thread.sleep(1000);
-        zeroGyroscope();
-      } catch (Exception e) { 
+    gyro = new Pigeon2(9, "Gary");
+    zeroGyroscope();
 
-      }
-    }).start();
+    odometry = new SwerveDriveOdometry(Constants.Swerve.swerveKinematics, getGyroscopeRotation(), getPositions());
+
+    field = new Field2d();
+    SmartDashboard.putData("Field", field);
+
   }
 
 
   public void zeroGyroscope() {
-      m_pigeon.setYaw(0.0);
+      gyro.setYaw(0.0);
   }
 
   public Rotation2d getGyroscopeRotation() {
-      return Rotation2d.fromDegrees(m_pigeon.getYaw());
+      return Rotation2d.fromDegrees(gyro.getYaw());
   }
 
   public double getHeading() {
@@ -94,6 +102,20 @@ public class Swerve extends SubsystemBase {
     backRight.setDesiredState(desiredStates[3]);
   }
 
+  public SwerveModulePosition[] getPositions() {
+    return new SwerveModulePosition[]{ 
+      frontLeft.getPosition(), frontRight.getPosition(), backLeft.getPosition(), backRight.getPosition()
+    };
+  }
+
+  public Pose2d getPose() {
+    return odometry.getPoseMeters();
+  }
+
+  public void resetOdometry(Pose2d pose) {
+    odometry.resetPosition(getGyroscopeRotation(), getPositions(), pose);
+  }
+
   @Override
   public void periodic() {
     SmartDashboard.putNumber("swerve heading", getHeading());
@@ -103,6 +125,11 @@ public class Swerve extends SubsystemBase {
     SmartDashboard.putNumber("bl abs angle", backLeft.getAbsoluteEncoderDegrees());
     SmartDashboard.putNumber("bl adjusted angle", backLeft.getAbsoluteEncoderRadians());
     SmartDashboard.putNumber("br abs angle", backRight.getAbsoluteEncoderDegrees());
+
+    SmartDashboard.putNumber("drive distance in meters", frontLeft.getDrivePositionMeters());
+
+    odometry.update(getGyroscopeRotation(), getPositions());
+    field.setRobotPose(getPose());
   }
 
 }

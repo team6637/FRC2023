@@ -7,16 +7,36 @@ package frc.robot.subsystems;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.wpilibj.Servo;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Constants;
 
 public class LimelightSubsystem extends SubsystemBase {
 	
 	private final NetworkTable table;
+	private final Servo servo;
+	private double kp = 0.05;
+	private boolean visionActive = false;
+	private final double servoUpPosition = 0.72;
+	private final double servoDownPosition = 0.53;
 
 	public LimelightSubsystem() {
 		table = NetworkTableInstance.getDefault().getTable("limelight");
-		setPipeline(0);
-		setupDriveMode();
+
+		servo = new Servo(0);
+		servo.set(servoUpPosition);
+
+		setVisionMode("april");
+
+		SmartDashboard.putNumber("ll kp", kp);
+	}
+
+	public void servoUp() {
+		servo.set(servoUpPosition);
+	}
+	public void servoDown() {
+		servo.set(servoDownPosition);
 	}
 
 	public boolean isTarget() {
@@ -29,7 +49,15 @@ public class LimelightSubsystem extends SubsystemBase {
 	 * @return tx as reported by the Limelight.
 	 */
 	public double getTx() {
-		return getValue("tx").getDouble(0.0);
+		kp = SmartDashboard.getNumber("ll kp", kp);
+		double output = getValue("tx").getDouble(0.0) * kp;
+		if (Math.abs(output) >= Constants.LimeLightConstants.limelightMaxSpeed) {
+			output = Constants.LimeLightConstants.limelightMaxSpeed * Math.signum(output);
+		}
+		if (!visionActive) {
+			output = 0.0;
+		}
+		return -output;
 	}
 
 	/**
@@ -71,17 +99,6 @@ public class LimelightSubsystem extends SubsystemBase {
 		getValue("stream").setNumber(streamMode);
  	}
 	
-	public void setupAutoAim() {
-		setLedMode(3);
-		setCameraMode(0);
-	}
-	  
-	public void setupDriveMode() {
-		setLedMode(1);
-		setCameraMode(0);
-		setStream(2);
-	}
-
 	public void setPipeline(int number) {
 		getValue("pipeline").setNumber(number);
 	}
@@ -90,8 +107,30 @@ public class LimelightSubsystem extends SubsystemBase {
 		return table.getEntry(key);
 	}
 
-	// return inches
-	public double getDistance() {
-		return (104.0-25.0) / Math.tan(Math.toRadians(34.74 + getTx()));
+	public void setVisionMode(String visionMode) {
+		setLedMode(0);
+		setCameraMode(0);
+		if (visionMode == "april") {
+			servoUp();
+			setPipeline(0);
+			visionActive = true;
+		} else if (visionMode == "object") {
+			servoDown();
+			setPipeline(1);
+			visionActive = true;
+		} else if (visionMode == "reflective") {
+			servoUp();
+			setPipeline(2);
+			visionActive = true;
+		} else {
+			visionActive = false;
+			setLedMode(1);
+			setCameraMode(1);
+		}
+	}
+
+	@Override
+	public void periodic() {
+		SmartDashboard.putNumber("ll get tx", getTx());
 	}
 }

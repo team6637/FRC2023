@@ -4,10 +4,14 @@
 
 package frc.robot.commands;
 
+import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
+
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import frc.robot.Constants;
 import frc.robot.subsystems.Swerve;
@@ -15,14 +19,16 @@ import frc.robot.subsystems.Swerve;
 public class SwerveTeleopCommand extends CommandBase {
   
   private final Swerve swerve;
-  private DoubleSupplier x, y, z;
+  private DoubleSupplier x, y, z, visionOffset, driveInversionMultiplier;
   private SlewRateLimiter xLimiter, yLimiter, zLimiter;
 
-  public SwerveTeleopCommand(Swerve swerve, DoubleSupplier x, DoubleSupplier y, DoubleSupplier z) {
+  public SwerveTeleopCommand(Swerve swerve, DoubleSupplier x, DoubleSupplier y, DoubleSupplier z, DoubleSupplier visionOffset, DoubleSupplier driveInversionMultiplier) {
     this.swerve = swerve;
     this.x = x;
     this.y = y;
     this.z = z;
+    this.visionOffset = visionOffset;
+    this.driveInversionMultiplier = driveInversionMultiplier;
 
     xLimiter = new SlewRateLimiter(Constants.Swerve.maxAccelerationMetersPerSecond);
     yLimiter = new SlewRateLimiter(Constants.Swerve.maxAccelerationMetersPerSecond);
@@ -39,10 +45,27 @@ public class SwerveTeleopCommand extends CommandBase {
   @Override
   public void execute() {
 
+    SmartDashboard.putNumber("joystick raw x", this.x.getAsDouble());
+    SmartDashboard.putNumber("joystick raw y", this.y.getAsDouble());
+    SmartDashboard.putNumber("joystick raw z", this.z.getAsDouble());
+    SmartDashboard.putNumber("vision offset", this.visionOffset.getAsDouble());
+
     // adjust for joystick drift
-    double xOutput = modifyAxis(this.x.getAsDouble());
-    double yOutput = modifyAxis(this.y.getAsDouble());
-    double zOutput = modifyAxis(this.z.getAsDouble());
+    double xOutput = modifyAxis(this.x.getAsDouble(), 0.1) * driveInversionMultiplier.getAsDouble();
+    double yOutput = modifyAxis(this.y.getAsDouble(), 0.2) * driveInversionMultiplier.getAsDouble();
+
+    //double xOutput = modifyAxis(this.x.getAsDouble(), 0.1);
+    //double yOutput = modifyAxis(this.y.getAsDouble(), 0.2);
+
+    double zOutput = modifyAxis(this.z.getAsDouble(), 0.1);
+
+    yOutput = yOutput + visionOffset.getAsDouble();
+    if (Math.abs(yOutput) > 1) {
+      yOutput = 1 * Math.signum(yOutput);
+    }
+    if (Math.abs(zOutput) >= Constants.Swerve.maxTurnSpeed) {
+      zOutput = Constants.Swerve.maxTurnSpeed * Math.signum(zOutput);
+    }
 
     xOutput = xOutput * Constants.Swerve.maxSpeed;
     yOutput = yOutput * Constants.Swerve.maxSpeed;
@@ -73,22 +96,10 @@ public class SwerveTeleopCommand extends CommandBase {
     return false;
   }
 
-  private static double deadband(double value) {
-    double deadband = Constants.Swerve.joystickDeadband;
-    if (Math.abs(value) > deadband) {
-        if (value > 0.0) {
-            return (value - deadband) / (1.0 - deadband);
-        } else {
-            return (value + deadband) / (1.0 - deadband);
-        }
-    } else {
-        return 0.0;
-    }
-  }
-
-  private static double modifyAxis(double value) {
+  private static double modifyAxis(double value, double deadband) {
       // Deadband - ignore really low numbers
-      value = deadband(value);
+      value = MathUtil.applyDeadband(value, deadband);
+      //value = deadband(value, deadband);
 
       // Square the axis for finer lower # control (.9 * .9 = .81, .2 * .2 = .4)
       value = Math.copySign(value * value, value);
