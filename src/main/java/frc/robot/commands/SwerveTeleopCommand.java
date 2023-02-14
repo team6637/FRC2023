@@ -80,7 +80,7 @@ public class SwerveTeleopCommand extends CommandBase {
 
     SwerveModuleState[] moduleStates = Constants.Swerve.swerveKinematics.toSwerveModuleStates(chassisSpeeds);
 
-    swerve.setModuleState(moduleStates);
+    swerve.setModuleStates(moduleStates);
 
   }
 

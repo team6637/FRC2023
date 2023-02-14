@@ -17,11 +17,12 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.wpilibj.Timer;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants;
 import frc.robot.Robot;
 import frc.lib.config.CTREConfigs;
+import frc.lib.config.SwerveModuleConstants;
 import frc.lib.math.Conversions;
+import frc.lib.math.OnboardModuleState;
 
 
 public class SwerveModule {
@@ -34,34 +35,31 @@ public class SwerveModule {
     private RelativeEncoder integratedAngleEncoder;
 
     private final CANCoder absoluteEncoder;
-    public final double absoluteEncoderOffsetRad;
+    public double absoluteEncoderOffsetRad;
 
-    public final int swervePodId;
+    public final int moduleNumber;
 
     public Rotation2d lastAngle;
 
     public SwerveModule(
-            int swervePodId,
-            int driveMotorId, 
-            int turnMotorId,
-            int absoluteEncoderId,
-            double absoluteEncoderOffsetRad
+            int moduleNumber,
+            SwerveModuleConstants constants
         ) {
         
-        this.swervePodId = swervePodId;
+        this.moduleNumber = moduleNumber;
 
-        driveMotor = new TalonFX(driveMotorId, "Gary");
+        driveMotor = new TalonFX(constants.driveMotorID, "Gary");
         Robot.ctreConfigs = new CTREConfigs();
         configDriveMotor();
 
-        turnMotor = new CANSparkMax(turnMotorId, MotorType.kBrushless);
+        turnMotor = new CANSparkMax(constants.angleMotorID, MotorType.kBrushless);
         integratedAngleEncoder = turnMotor.getEncoder();
         configTurnMotor();
 
         turnPidController = new PIDController(Constants.Swerve.turnKP, Constants.Swerve.turnKI, Constants.Swerve.turnKD);
         turnPidController.enableContinuousInput(-Math.PI, Math.PI);
 
-        absoluteEncoder = new CANCoder(absoluteEncoderId, "Gary");
+        absoluteEncoder = new CANCoder(constants.cancoderID, "Gary");
         configAbsoluteEncoder();
         this.absoluteEncoderOffsetRad = absoluteEncoderOffsetRad;
 
@@ -134,27 +132,31 @@ public class SwerveModule {
         return new SwerveModuleState(getDriveVelocity(), new Rotation2d(getTurnPosition()));
     } 
 
-    public void setDesiredState(SwerveModuleState state) {
-        state = SwerveModuleState.optimize(state, getState().angle);
+    public void setDesiredState(SwerveModuleState desiredState, Boolean isOpenLoop) {
 
-        Rotation2d angle = (Math.abs(state.speedMetersPerSecond) <= (Constants.Swerve.maxSpeed * 0.01))
+        desiredState = OnboardModuleState.optimize(desiredState, getState().angle);
+        //state = SwerveModuleState.optimize(state, getState().angle);
+
+        Rotation2d angle = (Math.abs(desiredState.speedMetersPerSecond) <= (Constants.Swerve.maxSpeed * 0.01))
             ? lastAngle
-            : state.angle;
+            : desiredState.angle;
 
 
-        double percentOutput = state.speedMetersPerSecond / Constants.Swerve.maxSpeed;
+        double percentOutput = desiredState.speedMetersPerSecond / Constants.Swerve.maxSpeed;
         driveMotor.set(ControlMode.PercentOutput, percentOutput);
+
+        // if isn't open loop
+        // driveController.setReference(
+        //   desiredState.speedMetersPerSecond,
+        //   ControlType.kVelocity,
+        //   0,
+        //   feedforward.calculate(desiredState.speedMetersPerSecond)
+        // );
 
         double turnOutput = turnPidController.calculate(getTurnPosition(), angle.getRadians());
 
-        SmartDashboard.putNumber("swerve " + swervePodId + " turn output", turnOutput);
-        SmartDashboard.putNumber("swerve " + swervePodId + " turn position", getTurnPosition());
-        SmartDashboard.putNumber("swerve " + swervePodId + " turn setpoint", state.angle.getRadians());
         turnMotor.set(turnOutput);
-
         lastAngle = angle;
-
-        SmartDashboard.putString("swerve[" + swervePodId + "] state", state.toString());
     }
 
     public SwerveModulePosition getPosition(){

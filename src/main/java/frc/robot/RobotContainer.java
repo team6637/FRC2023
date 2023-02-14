@@ -4,6 +4,7 @@
 
 package frc.robot;
 
+import frc.robot.commands.AutonOneCommand;
 import frc.robot.commands.SwerveTeleopCommand;
 import frc.robot.subsystems.ArmSubsystem;
 import frc.robot.subsystems.ExtenderSubsystem;
@@ -11,6 +12,8 @@ import frc.robot.subsystems.GripperSubsystem;
 import frc.robot.subsystems.LimelightSubsystem;
 import frc.robot.subsystems.Swerve;
 import edu.wpi.first.wpilibj.Joystick;
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.RunCommand;
@@ -29,6 +32,7 @@ public class RobotContainer {
     private final Joystick driverStick = new Joystick(0);
     private final Joystick controlStick = new Joystick(1);
 
+    SendableChooser<Command> m_chooser = new SendableChooser<>();
 
     public RobotContainer() {
         // setup auton dropdown
@@ -43,6 +47,8 @@ public class RobotContainer {
             )
         );
         
+        m_chooser.setDefaultOption("test", new AutonOneCommand(m_swerve));
+        SmartDashboard.putData(m_chooser);
         configureButtonBindings();
     }
 
@@ -91,6 +97,14 @@ public class RobotContainer {
 
         new JoystickButton(driverStick, 4).onTrue(new InstantCommand(() -> m_gripperSubsystem.setSetpoint(Constants.GripperConstants.closeCube)));
 
+        // LED
+
+        // new JoystickButton(joystick, 1).whileTrue(new InstantCommand(()->ledSubsystem.turnLEDyellow(), ledSubsystem));
+
+        // new JoystickButton(joystick, 2).whileTrue(new InstantCommand(()->ledSubsystem.turnLEDpurple(), ledSubsystem));
+
+        // new JoystickButton(joystick, 3).whileTrue(new InstantCommand(()->ledSubsystem.turnLEDgreen(), ledSubsystem));
+
         // LIMELIGHT
         // Object Detection
         new JoystickButton(driverStick, 8).whileTrue(new RunCommand(() -> m_limelightSubsystem.setVisionMode("object"))).onFalse(new InstantCommand(() -> m_limelightSubsystem.setVisionMode("off")));
@@ -131,7 +145,7 @@ public class RobotContainer {
     }
 
     public Command getAutonomousCommand() {
-        return new InstantCommand();
+        //return m_chooser.getSelected();
+        return new AutonOneCommand(m_swerve);
     }
-
 }

@@ -5,11 +5,13 @@
 package frc.robot;
 
 import com.ctre.phoenix.motorcontrol.NeutralMode;
+import com.pathplanner.lib.PathConstraints;
 import com.revrobotics.CANSparkMax.IdleMode;
-
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
+import edu.wpi.first.math.trajectory.TrajectoryConfig;
+import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
 import frc.lib.config.SwerveModuleConstants;
 import frc.lib.util.COTSFalconSwerveConstants;
@@ -122,12 +124,18 @@ public final class Constants {
         //public static final double turnConversionFactorAngToRad = Rotation2d.fromDegrees(360.0 / chosenModule.angleGearRatio).getRadians();
         public static final double turnConversionFactorAngToRad = 1 / chosenModule.angleGearRatio * 2 * Math.PI;
     
-        public static final SwerveDriveKinematics swerveKinematics = new SwerveDriveKinematics(
+        public static SwerveDriveKinematics swerveKinematics = new SwerveDriveKinematics(
           new Translation2d(wheelBase / 2.0, trackWidth / 2.0),
           new Translation2d(wheelBase / 2.0, -trackWidth / 2.0),
           new Translation2d(-wheelBase / 2.0, trackWidth / 2.0),
           new Translation2d(-wheelBase / 2.0, -trackWidth / 2.0)
         );
+
+        public static TrajectoryConfig trajectoryConfig = new TrajectoryConfig(maxSpeed, maxAccelerationMetersPerSecond).setKinematics(swerveKinematics);
+
+        public static PathConstraints pathPlannerConstraints = new PathConstraints(maxSpeed, maxAccelerationMetersPerSecond);
+
+        public static final TrapezoidProfile.Constraints zConstraints = new TrapezoidProfile.Constraints(maxAngularVelocity, maxAccelerationRadiansPerSecond);
     
         /* Module Specific Constants */
         /* Front Left Module - Module 0 */

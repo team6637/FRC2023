@@ -53,7 +53,7 @@ public class TurnToAngleCommand extends CommandBase {
 
             ChassisSpeeds chassisSpeeds = new ChassisSpeeds(0.0, 0.0, speed);
             SwerveModuleState[] moduleStates = Constants.Swerve.swerveKinematics.toSwerveModuleStates(chassisSpeeds);
-            swerve.setModuleState(moduleStates);
+            swerve.setModuleStates(moduleStates);
             
         } else {
             complete = true;

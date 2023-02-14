@@ -27,7 +27,7 @@ public class LimelightSubsystem extends SubsystemBase {
 		servo = new Servo(0);
 		servo.set(servoUpPosition);
 
-		setVisionMode("april");
+		setVisionMode("off");
 
 		SmartDashboard.putNumber("ll kp", kp);
 	}
