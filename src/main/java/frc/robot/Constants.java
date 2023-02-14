@@ -133,10 +133,12 @@ public final class Constants {
 
         public static TrajectoryConfig trajectoryConfig = new TrajectoryConfig(maxSpeed, maxAccelerationMetersPerSecond).setKinematics(swerveKinematics);
 
-        public static PathConstraints pathPlannerConstraints = new PathConstraints(maxSpeed, maxAccelerationMetersPerSecond);
-
         public static final TrapezoidProfile.Constraints zConstraints = new TrapezoidProfile.Constraints(maxAngularVelocity, maxAccelerationRadiansPerSecond);
-    
+
+        public static final double autonXKp = 0.0;
+        public static final double  autonYKp = 0.0;
+        public static final double autonZKp = 0.0;
+
         /* Module Specific Constants */
         /* Front Left Module - Module 0 */
         public static final class Mod0 {

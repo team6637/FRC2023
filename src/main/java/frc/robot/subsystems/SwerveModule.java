@@ -5,6 +5,7 @@
 package frc.robot.subsystems;
 
 import com.ctre.phoenix.motorcontrol.ControlMode;
+import com.ctre.phoenix.motorcontrol.DemandType;
 import com.ctre.phoenix.motorcontrol.can.TalonFX;
 import com.ctre.phoenix.sensors.CANCoder;
 import com.revrobotics.CANSparkMax;
@@ -13,6 +14,7 @@ import com.revrobotics.CANSparkMax.IdleMode;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 
 import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
@@ -40,6 +42,8 @@ public class SwerveModule {
     public final int moduleNumber;
 
     public Rotation2d lastAngle;
+
+    private final SimpleMotorFeedforward feedforward = new SimpleMotorFeedforward(Constants.Swerve.driveKS, Constants.Swerve.driveKV, Constants.Swerve.driveKA);
 
     public SwerveModule(
             int moduleNumber,
@@ -145,13 +149,14 @@ public class SwerveModule {
         double percentOutput = desiredState.speedMetersPerSecond / Constants.Swerve.maxSpeed;
         driveMotor.set(ControlMode.PercentOutput, percentOutput);
 
-        // if isn't open loop
-        // driveController.setReference(
-        //   desiredState.speedMetersPerSecond,
-        //   ControlType.kVelocity,
-        //   0,
-        //   feedforward.calculate(desiredState.speedMetersPerSecond)
-        // );
+        // if(isOpenLoop){
+        //     double percentOutput = desiredState.speedMetersPerSecond / Constants.Swerve.maxSpeed;
+        //     driveMotor.set(ControlMode.PercentOutput, percentOutput);
+        // }
+        // else {
+        //     double velocity = Conversions.MPSToFalcon(desiredState.speedMetersPerSecond, Constants.Swerve.wheelCircumference, Constants.Swerve.driveGearRatio);
+        //     driveMotor.set(ControlMode.Velocity, velocity, DemandType.ArbitraryFeedForward, feedforward.calculate(desiredState.speedMetersPerSecond));
+        // }
 
         double turnOutput = turnPidController.calculate(getTurnPosition(), angle.getRadians());
 
