@@ -47,7 +47,7 @@ public class RobotContainer {
             )
         );
         
-        m_chooser.setDefaultOption("test", new AutonOneCommand(m_swerve));
+        m_chooser.setDefaultOption("Auton 1 (main)", new AutonOneCommand(m_swerve, m_armSubsystem, m_extenderSubsystem, m_gripperSubsystem));
         SmartDashboard.putData(m_chooser);
         configureButtonBindings();
     }
@@ -64,11 +64,11 @@ public class RobotContainer {
 
         new JoystickButton(driverStick, 10).whileTrue(new RunCommand(() -> m_armSubsystem.lower())).onFalse(new InstantCommand(() -> m_armSubsystem.stop()));
 
-        // RESET
+        // SET LOW
         new JoystickButton(controlStick, 11).onTrue(new SequentialCommandGroup(
-            new InstantCommand(() -> m_gripperSubsystem.setSetpoint(Constants.GripperConstants.closeCone)),
             new InstantCommand(() ->  m_extenderSubsystem.setSetpoint(0)),
             new WaitUntilCommand(() -> m_extenderSubsystem.atSetpoint()),
+            new InstantCommand(() -> m_gripperSubsystem.setSetpoint(20)),
             new InstantCommand(() -> m_armSubsystem.setSetpoint(Constants.ArmConstants.minAngle)),
             new WaitUntilCommand(() -> m_armSubsystem.atSetpoint()),
             new InstantCommand(() -> m_gripperSubsystem.setSetpoint(Constants.GripperConstants.fullOpen))
@@ -145,7 +145,6 @@ public class RobotContainer {
     }
 
     public Command getAutonomousCommand() {
-        //return m_chooser.getSelected();
-        return new AutonOneCommand(m_swerve);
+        return m_chooser.getSelected();
     }
 }
