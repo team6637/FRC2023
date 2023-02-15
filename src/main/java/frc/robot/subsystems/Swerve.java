@@ -18,39 +18,38 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 
 public class Swerve extends SubsystemBase {
-  private SwerveModule[] mSwerveMods;
 
-  // private final SwerveModule frontLeft = new SwerveModule(
-  //   0,
-  //   Constants.Swerve.Mod0.driveMotorID,
-  //   Constants.Swerve.Mod0.angleMotorID,
-  //   Constants.Swerve.Mod0.canCoderID,
-  //   Constants.Swerve.Mod0.angleOffset.getRadians()
-  // );
+  private final SwerveModule frontLeft = new SwerveModule(
+    0,
+    Constants.Swerve.Mod0.driveMotorID,
+    Constants.Swerve.Mod0.angleMotorID,
+    Constants.Swerve.Mod0.canCoderID,
+    Constants.Swerve.Mod0.angleOffset.getRadians()
+  );
 
-  // private final SwerveModule frontRight = new SwerveModule(
-  //   1,
-  //   Constants.Swerve.Mod1.driveMotorID,
-  //   Constants.Swerve.Mod1.angleMotorID,
-  //   Constants.Swerve.Mod1.canCoderID,
-  //   Constants.Swerve.Mod1.angleOffset.getRadians()
-  // );
+  private final SwerveModule frontRight = new SwerveModule(
+    1,
+    Constants.Swerve.Mod1.driveMotorID,
+    Constants.Swerve.Mod1.angleMotorID,
+    Constants.Swerve.Mod1.canCoderID,
+    Constants.Swerve.Mod1.angleOffset.getRadians()
+  );
 
-  // private final SwerveModule backLeft = new SwerveModule(
-  //   2,
-  //   Constants.Swerve.Mod2.driveMotorID,
-  //   Constants.Swerve.Mod2.angleMotorID,
-  //   Constants.Swerve.Mod2.canCoderID,
-  //   Constants.Swerve.Mod2.angleOffset.getRadians()
-  // );
+  private final SwerveModule backLeft = new SwerveModule(
+    2,
+    Constants.Swerve.Mod2.driveMotorID,
+    Constants.Swerve.Mod2.angleMotorID,
+    Constants.Swerve.Mod2.canCoderID,
+    Constants.Swerve.Mod2.angleOffset.getRadians()
+  );
 
-  // private final SwerveModule backRight = new SwerveModule(
-  //   3,
-  //   Constants.Swerve.Mod3.driveMotorID,
-  //   Constants.Swerve.Mod3.angleMotorID,
-  //   Constants.Swerve.Mod3.canCoderID,
-  //   Constants.Swerve.Mod3.angleOffset.getRadians()
-  // );
+  private final SwerveModule backRight = new SwerveModule(
+    3,
+    Constants.Swerve.Mod3.driveMotorID,
+    Constants.Swerve.Mod3.angleMotorID,
+    Constants.Swerve.Mod3.canCoderID,
+    Constants.Swerve.Mod3.angleOffset.getRadians()
+  );
 
   // GYRO
   private final Pigeon2 gyro;
@@ -63,13 +62,6 @@ public class Swerve extends SubsystemBase {
   public Swerve() {
     gyro = new Pigeon2(9, "Gary");
     zeroGyroscope();
-
-    mSwerveMods = new SwerveModule[] {
-      new SwerveModule(0, Constants.Swerve.Mod0.constants),
-      new SwerveModule(1, Constants.Swerve.Mod1.constants),
-      new SwerveModule(2, Constants.Swerve.Mod2.constants),
-      new SwerveModule(3, Constants.Swerve.Mod3.constants)
-    };
 
     odometry = new SwerveDriveOdometry(Constants.Swerve.swerveKinematics, getGyroscopeRotation(), getPositions());
 
@@ -96,33 +88,24 @@ public class Swerve extends SubsystemBase {
   }
 
   public void stopModules() {
-    for (SwerveModule mod : mSwerveMods) {
-      mod.stop();
-    }
+    frontLeft.stop();
+    frontRight.stop();
+    backLeft.stop();
+    backRight.stop();
   }
 
   public void setModuleStates(SwerveModuleState[] desiredStates) {
     SwerveDriveKinematics.desaturateWheelSpeeds(desiredStates, Constants.Swerve.maxSpeed);
-
-    for (SwerveModule mod : mSwerveMods) {
-      mod.setDesiredState(desiredStates[mod.moduleNumber], false); // false
-    }
+    frontLeft.setDesiredState(desiredStates[0]);
+    frontRight.setDesiredState(desiredStates[1]);
+    backLeft.setDesiredState(desiredStates[2]);
+    backRight.setDesiredState(desiredStates[3]);
   }
 
-  public SwerveModuleState[] getStates() {
-    SwerveModuleState[] states = new SwerveModuleState[4];
-    for (SwerveModule mod : mSwerveMods) {
-      states[mod.moduleNumber] = mod.getState();
-    }
-    return states;
-  }
-
-  public SwerveModulePosition[] getPositions(){
-    SwerveModulePosition[] positions = new SwerveModulePosition[4];
-    for(SwerveModule mod : mSwerveMods){
-      positions[mod.moduleNumber] = mod.getPosition();
-    }
-    return positions;
+  public SwerveModulePosition[] getPositions() {
+    return new SwerveModulePosition[]{ 
+      frontLeft.getPosition(), frontRight.getPosition(), backLeft.getPosition(), backRight.getPosition()
+    };
   }
 
   public Pose2d getPose() {
@@ -136,18 +119,17 @@ public class Swerve extends SubsystemBase {
   @Override
   public void periodic() {
     SmartDashboard.putNumber("swerve heading", getHeading());
+    SmartDashboard.putNumber("fl abs angle", frontLeft.getAbsoluteEncoderDegrees());
+    SmartDashboard.putNumber("fr abs angle", frontRight.getAbsoluteEncoderDegrees());
+    SmartDashboard.putNumber("fr adjusted angle", frontRight.getAbsoluteEncoderRadians());
+    SmartDashboard.putNumber("bl abs angle", backLeft.getAbsoluteEncoderDegrees());
+    SmartDashboard.putNumber("bl adjusted angle", backLeft.getAbsoluteEncoderRadians());
+    SmartDashboard.putNumber("br abs angle", backRight.getAbsoluteEncoderDegrees());
+
+    SmartDashboard.putNumber("drive distance in meters", frontLeft.getDrivePositionMeters());
 
     odometry.update(getGyroscopeRotation(), getPositions());
     field.setRobotPose(getPose());
-
-    for (SwerveModule mod : mSwerveMods) {
-      SmartDashboard.putNumber(
-          "Mod " + mod.moduleNumber + " Cancoder", mod.getAbsoluteEncoderDegrees());
-      SmartDashboard.putNumber(
-          "Mod " + mod.moduleNumber + " Integrated", mod.getState().angle.getDegrees());
-      SmartDashboard.putNumber(
-          "Mod " + mod.moduleNumber + " Velocity", mod.getState().speedMetersPerSecond);
-    }
   }
 
 }

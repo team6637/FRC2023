@@ -63,9 +63,7 @@ public class SwerveTeleopCommand extends CommandBase {
     if (Math.abs(yOutput) > 1) {
       yOutput = 1 * Math.signum(yOutput);
     }
-    if (Math.abs(zOutput) >= Constants.Swerve.maxTurnSpeed) {
-      zOutput = Constants.Swerve.maxTurnSpeed * Math.signum(zOutput);
-    }
+      zOutput = zOutput * Constants.Swerve.maxTurnMultiplier;
 
     xOutput = xOutput * Constants.Swerve.maxSpeed;
     yOutput = yOutput * Constants.Swerve.maxSpeed;

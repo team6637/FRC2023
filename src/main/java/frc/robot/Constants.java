@@ -60,7 +60,7 @@ public final class Constants {
 
     // SWERVE
     public static class Swerve {
-        public static final double maxTurnSpeed = 0.5;
+        public static final double maxTurnMultiplier = 0.5;
     
         public static final double trackWidth = Units.inchesToMeters(23.5);
         public static final double wheelBase = Units.inchesToMeters(23.5);
@@ -78,7 +78,7 @@ public final class Constants {
         public static final double maxAngularVelocity = maxSpeed / Math.hypot(trackWidth / 2.0, wheelBase / 2.0);
     
     
-        public static final double maxAccelerationMetersPerSecond = 9.0;
+        public static final double maxAccelerationMetersPerSecond = 2.5;
         public static final double maxAccelerationRadiansPerSecond = Math.PI;
     
     
@@ -135,9 +135,9 @@ public final class Constants {
 
         public static final TrapezoidProfile.Constraints zConstraints = new TrapezoidProfile.Constraints(maxAngularVelocity, maxAccelerationRadiansPerSecond);
 
-        public static final double autonXKp = 0.0;
-        public static final double  autonYKp = 0.0;
-        public static final double autonZKp = 0.0;
+        public static final double autonXKp = 5.0;
+        public static final double autonYKp = 5.0;
+        public static final double autonZKp = 5.0;
 
         /* Module Specific Constants */
         /* Front Left Module - Module 0 */

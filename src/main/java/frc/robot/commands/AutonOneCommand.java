@@ -16,7 +16,7 @@ import com.pathplanner.lib.commands.PPSwerveControllerCommand;
 public class AutonOneCommand extends SequentialCommandGroup {
     public AutonOneCommand(Swerve m_driveSubsystem) {
         
-        PathPlannerTrajectory trajectory = PathPlanner.loadPath("test", Constants.Swerve.maxSpeed, Constants.Swerve.maxAccelerationMetersPerSecond);
+        PathPlannerTrajectory trajectory = PathPlanner.loadPath("test3", Constants.Swerve.maxSpeed, Constants.Swerve.maxAccelerationMetersPerSecond);
 
         PIDController autonXController = new PIDController(Constants.Swerve.autonXKp, 0, 0);
         PIDController autonYController = new PIDController(Constants.Swerve.autonYKp, 0, 0);

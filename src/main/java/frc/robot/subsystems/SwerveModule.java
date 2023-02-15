@@ -5,7 +5,6 @@
 package frc.robot.subsystems;
 
 import com.ctre.phoenix.motorcontrol.ControlMode;
-import com.ctre.phoenix.motorcontrol.DemandType;
 import com.ctre.phoenix.motorcontrol.can.TalonFX;
 import com.ctre.phoenix.sensors.CANCoder;
 import com.revrobotics.CANSparkMax;
@@ -14,17 +13,15 @@ import com.revrobotics.CANSparkMax.IdleMode;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 
 import edu.wpi.first.math.controller.PIDController;
-import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants;
 import frc.robot.Robot;
 import frc.lib.config.CTREConfigs;
-import frc.lib.config.SwerveModuleConstants;
 import frc.lib.math.Conversions;
-import frc.lib.math.OnboardModuleState;
 
 
 public class SwerveModule {
@@ -37,33 +34,34 @@ public class SwerveModule {
     private RelativeEncoder integratedAngleEncoder;
 
     private final CANCoder absoluteEncoder;
-    public double absoluteEncoderOffsetRad;
+    public final double absoluteEncoderOffsetRad;
 
-    public final int moduleNumber;
+    public final int swervePodId;
 
     public Rotation2d lastAngle;
 
-    private final SimpleMotorFeedforward feedforward = new SimpleMotorFeedforward(Constants.Swerve.driveKS, Constants.Swerve.driveKV, Constants.Swerve.driveKA);
-
     public SwerveModule(
-            int moduleNumber,
-            SwerveModuleConstants constants
+            int swervePodId,
+            int driveMotorId, 
+            int turnMotorId,
+            int absoluteEncoderId,
+            double absoluteEncoderOffsetRad
         ) {
         
-        this.moduleNumber = moduleNumber;
+        this.swervePodId = swervePodId;
 
-        driveMotor = new TalonFX(constants.driveMotorID, "Gary");
+        driveMotor = new TalonFX(driveMotorId, "Gary");
         Robot.ctreConfigs = new CTREConfigs();
         configDriveMotor();
 
-        turnMotor = new CANSparkMax(constants.angleMotorID, MotorType.kBrushless);
+        turnMotor = new CANSparkMax(turnMotorId, MotorType.kBrushless);
         integratedAngleEncoder = turnMotor.getEncoder();
         configTurnMotor();
 
         turnPidController = new PIDController(Constants.Swerve.turnKP, Constants.Swerve.turnKI, Constants.Swerve.turnKD);
         turnPidController.enableContinuousInput(-Math.PI, Math.PI);
 
-        absoluteEncoder = new CANCoder(constants.cancoderID, "Gary");
+        absoluteEncoder = new CANCoder(absoluteEncoderId, "Gary");
         configAbsoluteEncoder();
         this.absoluteEncoderOffsetRad = absoluteEncoderOffsetRad;
 
@@ -136,32 +134,27 @@ public class SwerveModule {
         return new SwerveModuleState(getDriveVelocity(), new Rotation2d(getTurnPosition()));
     } 
 
-    public void setDesiredState(SwerveModuleState desiredState, Boolean isOpenLoop) {
+    public void setDesiredState(SwerveModuleState state) {
+        state = SwerveModuleState.optimize(state, getState().angle);
 
-        desiredState = OnboardModuleState.optimize(desiredState, getState().angle);
-        //state = SwerveModuleState.optimize(state, getState().angle);
-
-        Rotation2d angle = (Math.abs(desiredState.speedMetersPerSecond) <= (Constants.Swerve.maxSpeed * 0.01))
+        Rotation2d angle = (Math.abs(state.speedMetersPerSecond) <= (Constants.Swerve.maxSpeed * 0.01))
             ? lastAngle
-            : desiredState.angle;
+            : state.angle;
 
 
-        double percentOutput = desiredState.speedMetersPerSecond / Constants.Swerve.maxSpeed;
+        double percentOutput = state.speedMetersPerSecond / Constants.Swerve.maxSpeed;
         driveMotor.set(ControlMode.PercentOutput, percentOutput);
-
-        // if(isOpenLoop){
-        //     double percentOutput = desiredState.speedMetersPerSecond / Constants.Swerve.maxSpeed;
-        //     driveMotor.set(ControlMode.PercentOutput, percentOutput);
-        // }
-        // else {
-        //     double velocity = Conversions.MPSToFalcon(desiredState.speedMetersPerSecond, Constants.Swerve.wheelCircumference, Constants.Swerve.driveGearRatio);
-        //     driveMotor.set(ControlMode.Velocity, velocity, DemandType.ArbitraryFeedForward, feedforward.calculate(desiredState.speedMetersPerSecond));
-        // }
 
         double turnOutput = turnPidController.calculate(getTurnPosition(), angle.getRadians());
 
+        SmartDashboard.putNumber("swerve " + swervePodId + " turn output", turnOutput);
+        SmartDashboard.putNumber("swerve " + swervePodId + " turn position", getTurnPosition());
+        SmartDashboard.putNumber("swerve " + swervePodId + " turn setpoint", state.angle.getRadians());
         turnMotor.set(turnOutput);
+
         lastAngle = angle;
+
+        SmartDashboard.putString("swerve[" + swervePodId + "] state", state.toString());
     }
 
     public SwerveModulePosition getPosition(){
