@@ -47,10 +47,11 @@ public final class Constants {
 
         public static final boolean isTunable = true;
 
-        public static final double fullOpen = 5.0;
+        public static final double fullOpen = 14.0;
+        public static final double fullOpenAtTop = -10.0;
         public static final double fullClosed = 50.0;
 
-        public static final double closeCone = 48.0;
+        public static final double closeCone = 44.0;
         public static final double closeCube = 30.0;
     }
 
@@ -72,7 +73,7 @@ public final class Constants {
     
          /* Swerve Profiling Values */
         /** Meters per Second */
-        public static final double maxSpeed = 3.0;
+        public static final double maxSpeed = 2.0;
 
         /** Radians per Second */
         public static final double maxAngularVelocity = maxSpeed / Math.hypot(trackWidth / 2.0, wheelBase / 2.0);
@@ -133,11 +134,11 @@ public final class Constants {
 
         public static TrajectoryConfig trajectoryConfig = new TrajectoryConfig(maxSpeed, maxAccelerationMetersPerSecond).setKinematics(swerveKinematics);
 
-        public static final TrapezoidProfile.Constraints zConstraints = new TrapezoidProfile.Constraints(maxAngularVelocity, maxAccelerationRadiansPerSecond);
+        public static TrajectoryConfig trajectoryConfigSlow = new TrajectoryConfig(1.0, 1.0).setKinematics(swerveKinematics);
 
         public static final double autonXKp = 5.0;
         public static final double autonYKp = 5.0;
-        public static final double autonZKp = 5.0;
+        public static final double autonZKp = 1.0;
 
         /* Module Specific Constants */
         /* Front Left Module - Module 0 */

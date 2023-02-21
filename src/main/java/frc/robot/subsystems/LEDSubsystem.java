@@ -5,7 +5,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class LEDSubsystem extends SubsystemBase {
 
-  private final Spark led = new Spark(0);
+  private final Spark led = new Spark(1);
   private double power;
   private final double green = 0.77;
   private final double yellow = 0.69;

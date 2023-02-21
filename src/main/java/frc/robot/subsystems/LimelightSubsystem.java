@@ -60,6 +60,10 @@ public class LimelightSubsystem extends SubsystemBase {
 		return -output;
 	}
 
+	public Boolean atTxTarget() {
+		return this.getTx() < 1;
+	}
+
 	/**
 	 * Vertical offset from crosshair to target (-20.5 degrees to 20.5 degrees).
 	 * 
@@ -110,7 +114,7 @@ public class LimelightSubsystem extends SubsystemBase {
 	public void setVisionMode(String visionMode) {
 		setLedMode(0);
 		setCameraMode(0);
-		if (visionMode == "april") {
+		if (visionMode == "cube") { //april
 			servoUp();
 			setPipeline(0);
 			visionActive = true;
@@ -118,7 +122,7 @@ public class LimelightSubsystem extends SubsystemBase {
 			servoDown();
 			setPipeline(1);
 			visionActive = true;
-		} else if (visionMode == "reflective") {
+		} else if (visionMode == "cone") { //reflective
 			servoUp();
 			setPipeline(2);
 			visionActive = true;

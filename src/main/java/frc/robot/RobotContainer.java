@@ -9,6 +9,7 @@ import frc.robot.commands.SwerveTeleopCommand;
 import frc.robot.subsystems.ArmSubsystem;
 import frc.robot.subsystems.ExtenderSubsystem;
 import frc.robot.subsystems.GripperSubsystem;
+import frc.robot.subsystems.LEDSubsystem;
 import frc.robot.subsystems.LimelightSubsystem;
 import frc.robot.subsystems.Swerve;
 import edu.wpi.first.wpilibj.Joystick;
@@ -18,6 +19,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
+import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.button.POVButton;
@@ -29,8 +31,10 @@ public class RobotContainer {
     private final ArmSubsystem m_armSubsystem = new ArmSubsystem(m_extenderSubsystem);
     private final LimelightSubsystem m_limelightSubsystem = new LimelightSubsystem();
     private final GripperSubsystem m_gripperSubsystem = new GripperSubsystem();
+    private final LEDSubsystem m_ledSubsystem = new LEDSubsystem();
     private final Joystick driverStick = new Joystick(0);
     private final Joystick controlStick = new Joystick(1);
+    private String mode = "cube";
 
     SendableChooser<Command> m_chooser = new SendableChooser<>();
 
@@ -43,11 +47,13 @@ public class RobotContainer {
                 () -> -driverStick.getX(),
                 () -> -driverStick.getTwist(),
                 () -> m_limelightSubsystem.getTx(),
-                () -> driveInversionMultiplier()
+                () -> driveInversionMultiplier(),
+                false
             )
         );
         
-        m_chooser.setDefaultOption("Auton 1 (main)", new AutonOneCommand(m_swerve, m_armSubsystem, m_extenderSubsystem, m_gripperSubsystem));
+        m_chooser.setDefaultOption("Default (does nothing)", new InstantCommand());
+        m_chooser.addOption("Auton 1 (main)", new AutonOneCommand(m_swerve, m_armSubsystem, m_extenderSubsystem, m_gripperSubsystem, m_limelightSubsystem));
         SmartDashboard.putData(m_chooser);
         configureButtonBindings();
     }
@@ -67,6 +73,7 @@ public class RobotContainer {
         // SET LOW
         new JoystickButton(controlStick, 11).onTrue(new SequentialCommandGroup(
             new InstantCommand(() ->  m_extenderSubsystem.setSetpoint(0)),
+            new WaitCommand(0.1),
             new WaitUntilCommand(() -> m_extenderSubsystem.atSetpoint()),
             new InstantCommand(() -> m_gripperSubsystem.setSetpoint(20)),
             new InstantCommand(() -> m_armSubsystem.setSetpoint(Constants.ArmConstants.minAngle)),
@@ -77,6 +84,7 @@ public class RobotContainer {
         // SET MID
         new JoystickButton(controlStick, 9).onTrue(new SequentialCommandGroup(
             new InstantCommand(() ->  m_armSubsystem.setSetpoint(20)),
+            new WaitCommand(0.1),
             new WaitUntilCommand(() -> m_armSubsystem.atSetpoint()),
             new InstantCommand(() -> m_extenderSubsystem.setSetpoint(17.5))
         ));
@@ -84,6 +92,7 @@ public class RobotContainer {
         // SET HIGH
         new JoystickButton(controlStick, 7).onTrue(new SequentialCommandGroup(
             new InstantCommand(() ->  m_armSubsystem.setSetpoint(26.8)),
+            new WaitCommand(0.1),
             new WaitUntilCommand(() -> m_armSubsystem.atSetpoint()),
             new InstantCommand(() -> m_extenderSubsystem.setSetpoint(155))
         ));
@@ -98,19 +107,15 @@ public class RobotContainer {
         new JoystickButton(driverStick, 4).onTrue(new InstantCommand(() -> m_gripperSubsystem.setSetpoint(Constants.GripperConstants.closeCube)));
 
         // LED
-
-        // new JoystickButton(joystick, 1).whileTrue(new InstantCommand(()->ledSubsystem.turnLEDyellow(), ledSubsystem));
-
-        // new JoystickButton(joystick, 2).whileTrue(new InstantCommand(()->ledSubsystem.turnLEDpurple(), ledSubsystem));
-
-        // new JoystickButton(joystick, 3).whileTrue(new InstantCommand(()->ledSubsystem.turnLEDgreen(), ledSubsystem));
+        new JoystickButton(controlStick, 3).whileTrue(new InstantCommand(()->setModeCone()));
+        new JoystickButton(controlStick, 4).whileTrue(new InstantCommand(()->setModeCube()));
 
         // LIMELIGHT
         // Object Detection
         new JoystickButton(driverStick, 8).whileTrue(new RunCommand(() -> m_limelightSubsystem.setVisionMode("object"))).onFalse(new InstantCommand(() -> m_limelightSubsystem.setVisionMode("off")));
 
         // April Tag & Reflective Tape Detection
-        new JoystickButton(driverStick, 7).whileTrue(new RunCommand(() -> m_limelightSubsystem.setVisionMode("april"))).onFalse(new InstantCommand(() -> m_limelightSubsystem.setVisionMode("off")));
+        new JoystickButton(driverStick, 7).whileTrue(new RunCommand(() -> m_limelightSubsystem.setVisionMode(mode))).onFalse(new InstantCommand(() -> m_limelightSubsystem.setVisionMode("off")));
 
         // POV fine control
         new POVButton(driverStick, 0).whileTrue(new RunCommand(() -> m_extenderSubsystem.extend()));
@@ -123,7 +128,8 @@ public class RobotContainer {
             () -> 0.45,
             () -> 0.0,
             () -> 0.0,
-            () -> driveInversionMultiplier()
+            () -> driveInversionMultiplier(),
+            false
         ));
 
         new POVButton(driverStick, 90).whileTrue(new SwerveTeleopCommand(
@@ -132,7 +138,8 @@ public class RobotContainer {
             () -> -0.45,
             () -> 0.0,
             () -> 0.0,
-            () -> driveInversionMultiplier()
+            () -> driveInversionMultiplier(),
+            false
         ));
     }
 
@@ -146,5 +153,17 @@ public class RobotContainer {
 
     public Command getAutonomousCommand() {
         return m_chooser.getSelected();
+    }
+
+    public void setModeCube() {
+        mode = "cube";
+        m_ledSubsystem.turnLEDpurple();
+    }
+    public void setModeCone() {
+        mode = "cone";
+        m_ledSubsystem.turnLEDyellow();
+    }
+    public String getMode() {
+        return mode;
     }
 }

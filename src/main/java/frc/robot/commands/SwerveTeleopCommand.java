@@ -21,8 +21,9 @@ public class SwerveTeleopCommand extends CommandBase {
   private final Swerve swerve;
   private DoubleSupplier x, y, z, visionOffset, driveInversionMultiplier;
   private SlewRateLimiter xLimiter, yLimiter, zLimiter;
+  boolean isAuton;
 
-  public SwerveTeleopCommand(Swerve swerve, DoubleSupplier x, DoubleSupplier y, DoubleSupplier z, DoubleSupplier visionOffset, DoubleSupplier driveInversionMultiplier) {
+  public SwerveTeleopCommand(Swerve swerve, DoubleSupplier x, DoubleSupplier y, DoubleSupplier z, DoubleSupplier visionOffset, DoubleSupplier driveInversionMultiplier, boolean isAuton) {
     this.swerve = swerve;
     this.x = x;
     this.y = y;
@@ -63,7 +64,7 @@ public class SwerveTeleopCommand extends CommandBase {
     if (Math.abs(yOutput) > 1) {
       yOutput = 1 * Math.signum(yOutput);
     }
-      zOutput = zOutput * Constants.Swerve.maxTurnMultiplier;
+    zOutput = zOutput * Constants.Swerve.maxTurnMultiplier;
 
     xOutput = xOutput * Constants.Swerve.maxSpeed;
     yOutput = yOutput * Constants.Swerve.maxSpeed;
@@ -91,7 +92,7 @@ public class SwerveTeleopCommand extends CommandBase {
   // Returns true when the command should end.
   @Override
   public boolean isFinished() {
-    return false;
+    return isAuton ? visionOffset.getAsDouble() < 1 : false;
   }
 
   private static double modifyAxis(double value, double deadband) {

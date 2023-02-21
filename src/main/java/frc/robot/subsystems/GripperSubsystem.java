@@ -19,7 +19,7 @@ public class GripperSubsystem extends SubsystemBase {
   DutyCycleEncoder throughboreEncoder = new DutyCycleEncoder(1);
 
   private final double encoderOffset = 220.0;
-  private double kp = 0.0128; // 0.025
+  private double kp = 0.01; // 0.025
   private final boolean usingPID  = true;
   private double setpoint = Constants.GripperConstants.fullOpen;
   private final double setpointIncrementer = 0.8;
@@ -48,8 +48,14 @@ public class GripperSubsystem extends SubsystemBase {
     }
   }
 
+  public void autonSetSetpoint(double newSetpoint) {
+    setpoint = newSetpoint;
+  }
+
   public double getPidOutput() {
-    return pid.calculate(getEncoderPos(), setpoint);
+    double output = pid.calculate(getEncoderPos(), setpoint);
+    if(Math.abs(output) > 0.25) output = 0.25 * Math.signum(output);
+    return output;
   }
 
   public void closeGripper() {
