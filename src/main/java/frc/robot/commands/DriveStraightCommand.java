@@ -20,10 +20,16 @@ public class DriveStraightCommand extends CommandBase {
   double targetX;
   double kp = 0.5;
   PIDController pid = new PIDController(kp, 0.0, 0.0);
+  boolean isBackwards;
+
+  double angleKp = 0.01;
+  PIDController anglePid = new PIDController(angleKp, 0.0, 0.0);
+  double initialHeading;
   
-  public DriveStraightCommand(Swerve swerve, double targetX) {
+  public DriveStraightCommand(Swerve swerve, double targetX, boolean isBackwards) {
     this.swerve = swerve;
     this.targetX = targetX;
+    this.isBackwards = isBackwards;
     addRequirements(swerve);
   }
 
@@ -33,13 +39,14 @@ public class DriveStraightCommand extends CommandBase {
     SmartDashboard.putNumber("drive straight kp", kp);
     pid.setTolerance(.01);
     this.setpoint = swerve.getPose().getX() + targetX;
+    initialHeading = swerve.getHeading();
   }
 
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
-    kp = SmartDashboard.getNumber("drive straight kp", kp);
-    pid.setP(kp);
+    // kp = SmartDashboard.getNumber("drive straight kp", kp);
+    // pid.setP(kp);
     double currentX = swerve.getPose().getX();
     double output = pid.calculate(currentX, setpoint);
 
@@ -50,13 +57,22 @@ public class DriveStraightCommand extends CommandBase {
 
     output = output + 0.1 * Math.signum(output);
 
-    if (Math.abs(output) > 0.3) {
-      output = 0.3 * Math.signum(output);
+    if (Math.abs(output) > 0.2) {
+      output = 0.2 * Math.signum(output);
     }
 
-    output = -output * Constants.Swerve.maxSpeed;
+    output = output * Constants.Swerve.maxSpeed;
+    if(isBackwards) output = output * -1.0;
 
     SmartDashboard.putNumber("drive straight final output", output);
+
+
+    double zOutput = anglePid.calculate(swerve.getHeading(), initialHeading);
+    if (Math.abs(zOutput) > 0.3) {
+      zOutput = 0.3 * Math.signum(zOutput);
+    }
+    zOutput = zOutput * Constants.Swerve.maxAngularVelocity;
+
 
     ChassisSpeeds chassisSpeeds = new ChassisSpeeds(output, 0.0, 0.0);
     SwerveModuleState[] moduleStates = Constants.Swerve.swerveKinematics.toSwerveModuleStates(chassisSpeeds);

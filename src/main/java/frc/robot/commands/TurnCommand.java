@@ -14,7 +14,7 @@ import frc.robot.subsystems.Swerve;
 public class TurnCommand extends CommandBase {
   Swerve swerve;
   double setpoint;
-  double kp = 0.02;
+  double kp = 0.019;
   double error;
   int timer = 0;
 
@@ -34,14 +34,18 @@ public class TurnCommand extends CommandBase {
   public void execute() {
     double currentAngle = swerve.getPose().getRotation().getDegrees();
 
+    if(currentAngle > -180.0 && currentAngle < -90.0) {
+      currentAngle = currentAngle + 360.0;
+    }
+
     error = setpoint - currentAngle;
 
     if(error < 2.0) timer++;
 
     double output = kp * error;
 
-    if (Math.abs(output) > 0.45) {
-      output = 0.45 * Math.signum(output);
+    if (Math.abs(output) > 0.29) {
+      output = 0.29 * Math.signum(output);
     }
 
     output = output * Constants.Swerve.maxAngularVelocity;

@@ -30,6 +30,7 @@ public class SwerveTeleopCommand extends CommandBase {
     this.z = z;
     this.visionOffset = visionOffset;
     this.driveInversionMultiplier = driveInversionMultiplier;
+    this.isAuton = isAuton;
 
     xLimiter = new SlewRateLimiter(Constants.Swerve.maxAccelerationMetersPerSecond);
     yLimiter = new SlewRateLimiter(Constants.Swerve.maxAccelerationMetersPerSecond);
@@ -40,7 +41,9 @@ public class SwerveTeleopCommand extends CommandBase {
 
   // Called when the command is initially scheduled.
   @Override
-  public void initialize() {}
+  public void initialize() {
+
+  }
 
   // Called every time the scheduler runs while the command is scheduled.
   @Override
@@ -92,7 +95,7 @@ public class SwerveTeleopCommand extends CommandBase {
   // Returns true when the command should end.
   @Override
   public boolean isFinished() {
-    return isAuton ? visionOffset.getAsDouble() < 1 : false;
+    return isAuton ? visionOffset.getAsDouble() < 2 : false;
   }
 
   private static double modifyAxis(double value, double deadband) {

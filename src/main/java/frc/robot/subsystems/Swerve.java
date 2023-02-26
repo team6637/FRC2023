@@ -53,7 +53,7 @@ public class Swerve extends SubsystemBase {
 
   // GYRO
   private final Pigeon2 gyro;
-
+  public double initialRoll;
   private Field2d field;
   
   // ODOMETER
@@ -62,6 +62,7 @@ public class Swerve extends SubsystemBase {
   public Swerve() {
     gyro = new Pigeon2(9, "Gary");
     zeroGyroscope();
+    initialRoll = gyro.getRoll();
 
     odometry = new SwerveDriveOdometry(Constants.Swerve.swerveKinematics, getGyroscopeRotation(), getPositions());
 
@@ -116,8 +117,17 @@ public class Swerve extends SubsystemBase {
     odometry.resetPosition(getGyroscopeRotation(), getPositions(), pose);
   }
 
+  public double getRoll() {
+    return gyro.getRoll();
+  }
+
+  public double getYaw() {
+    return gyro.getYaw();
+  }
+
   @Override
   public void periodic() {
+    if(Constants.Swerve.isTunable) {
     SmartDashboard.putNumber("swerve heading", getHeading());
     SmartDashboard.putNumber("fl abs angle", frontLeft.getAbsoluteEncoderDegrees());
     SmartDashboard.putNumber("fr abs angle", frontRight.getAbsoluteEncoderDegrees());
@@ -125,8 +135,10 @@ public class Swerve extends SubsystemBase {
     SmartDashboard.putNumber("bl abs angle", backLeft.getAbsoluteEncoderDegrees());
     SmartDashboard.putNumber("bl adjusted angle", backLeft.getAbsoluteEncoderRadians());
     SmartDashboard.putNumber("br abs angle", backRight.getAbsoluteEncoderDegrees());
+    SmartDashboard.putNumber("gyro roll", getRoll());
 
     SmartDashboard.putNumber("drive distance in meters", frontLeft.getDrivePositionMeters());
+    }
 
     odometry.update(getGyroscopeRotation(), getPositions());
     field.setRobotPose(getPose());

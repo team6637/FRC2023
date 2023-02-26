@@ -30,6 +30,8 @@ public class LimelightSubsystem extends SubsystemBase {
 		setVisionMode("off");
 
 		SmartDashboard.putNumber("ll kp", kp);
+		setStream(2);
+
 	}
 
 	public void servoUp() {

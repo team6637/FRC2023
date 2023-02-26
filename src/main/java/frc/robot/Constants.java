@@ -47,8 +47,8 @@ public final class Constants {
 
         public static final boolean isTunable = true;
 
+        public static final double fullOpenWhenExtended = -1.0;
         public static final double fullOpen = 14.0;
-        public static final double fullOpenAtTop = -10.0;
         public static final double fullClosed = 50.0;
 
         public static final double closeCone = 44.0;
@@ -61,6 +61,8 @@ public final class Constants {
 
     // SWERVE
     public static class Swerve {
+        public static final boolean isTunable = true;
+
         public static final double maxTurnMultiplier = 0.5;
     
         public static final double trackWidth = Units.inchesToMeters(23.5);

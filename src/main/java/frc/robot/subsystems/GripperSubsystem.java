@@ -39,8 +39,8 @@ public class GripperSubsystem extends SubsystemBase {
   }
 
   public void setSetpoint(double newSetpoint) {
-    if (newSetpoint < Constants.GripperConstants.fullOpen) {
-      setpoint = Constants.GripperConstants.fullOpen;
+    if (newSetpoint < Constants.GripperConstants.fullOpenWhenExtended) {
+      setpoint = Constants.GripperConstants.fullOpenWhenExtended;
     } else if (newSetpoint > Constants.GripperConstants.fullClosed) {
       setpoint = Constants.GripperConstants.fullClosed;
     } else {
