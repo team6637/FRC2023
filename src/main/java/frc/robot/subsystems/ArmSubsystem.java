@@ -38,7 +38,7 @@ public class ArmSubsystem extends SubsystemBase {
   private boolean settingMinLevel = true;
 
   public ArmSubsystem(ExtenderSubsystem extenderSubsystem) {
-    pid.setTolerance(10.0);
+    pid.setTolerance(5.0);
 
     this.extenderSubsystemReference = extenderSubsystem;
     leftMotor.setInverted(false);

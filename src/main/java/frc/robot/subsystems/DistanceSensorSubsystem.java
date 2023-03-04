@@ -17,6 +17,7 @@ public class DistanceSensorSubsystem extends SubsystemBase {
   public DistanceSensorSubsystem() {
 
     distanceSensor = new Rev2mDistanceSensor(Port.kOnboard);
+    distanceSensor.setAutomaticMode(true);
 
   }
 

@@ -14,9 +14,15 @@ import frc.robot.subsystems.Swerve;
 
 public class AutonLevelCommand extends CommandBase {
 
-  Swerve swerve;
-  double rollKp = 0.021;
+  double rollKp = 0.017;
   double yawKp = 0.01;
+  double maxSpeed;
+  double slowMaxSpeed = 0.08;
+  boolean hasGoneBelowZeroOnce;
+  boolean hasGoneBelowZeroTwice;
+  int counter;
+
+  Swerve swerve;
   PIDController rollPID = new PIDController(rollKp, 0.0, 0.0);
   PIDController yawPID = new PIDController(rollKp, 0.0, 0.0);
   double initialHeading;
@@ -31,22 +37,37 @@ public class AutonLevelCommand extends CommandBase {
     SmartDashboard.putNumber("level roll rollKp", rollKp);    
     SmartDashboard.putNumber("level yaw pid", yawKp);
     initialHeading = swerve.getHeading();
+    counter = 0;
+    hasGoneBelowZeroOnce = false;
+    hasGoneBelowZeroTwice = false;
+    maxSpeed = 0.12;
   }
 
   @Override
   public void execute() {
-    rollKp = SmartDashboard.getNumber("level  rollKp", rollKp);
-    rollPID.setP(rollKp);
+    //rollKp = SmartDashboard.getNumber("level  rollKp", rollKp);
+    //rollPID.setP(rollKp);
+    double roll = swerve.getRoll();
+    if(Math.abs(roll) < 1) hasGoneBelowZeroOnce = true;
+    if(hasGoneBelowZeroOnce) maxSpeed = slowMaxSpeed;
+
+    if(hasGoneBelowZeroOnce) {
+      counter++;
+      if(counter > 250) {
+        if(Math.abs(roll) < 7.5) hasGoneBelowZeroTwice = true;
+      }
+    }
+
     double xOutput = rollPID.calculate(swerve.getRoll(), 0.0 + swerve.initialRoll);
 
-    if (Math.abs(xOutput) > 0.15) {
-      xOutput = 0.15 * Math.signum(xOutput);
+    if (Math.abs(xOutput) > maxSpeed) {
+      xOutput = maxSpeed * Math.signum(xOutput);
     }
 
     xOutput = -xOutput * Constants.Swerve.maxSpeed;
 
-    yawKp = SmartDashboard.getNumber("level yawKp", yawKp);
-    yawPID.setP(yawKp);
+    // yawKp = SmartDashboard.getNumber("level yawKp", yawKp);
+    // yawPID.setP(yawKp);
 
     double zOutput = yawPID.calculate(swerve.getHeading(), initialHeading);
     if (Math.abs(zOutput) > 0.2) {
@@ -65,11 +86,19 @@ public class AutonLevelCommand extends CommandBase {
 
   // Called once the command ends or is interrupted.
   @Override
-  public void end(boolean interrupted) {}
+  public void end(boolean interrupted) {
+
+    // spin the wheels
+    // ChassisSpeeds chassisSpeeds = new ChassisSpeeds(0.0, 0.1, 0.0);
+    // SwerveModuleState[] moduleStates = Constants.Swerve.swerveKinematics.toSwerveModuleStates(chassisSpeeds);
+    // swerve.setModuleStates(moduleStates);
+
+    swerve.stopModules();
+  }
 
   // Returns true when the command should end.
   @Override
   public boolean isFinished() {
-    return false;
+    return hasGoneBelowZeroOnce;
   }
 }

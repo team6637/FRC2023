@@ -11,7 +11,6 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.trajectory.TrajectoryConfig;
-import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
 import frc.lib.config.SwerveModuleConstants;
 import frc.lib.util.COTSFalconSwerveConstants;
@@ -45,13 +44,13 @@ public final class Constants {
     public static class GripperConstants {
         public static final int GRIPPER_MOTOR_PORT = 34;
 
-        public static final boolean isTunable = true;
+        public static final boolean isTunable = false;
 
         public static final double fullOpenWhenExtended = -1.0;
         public static final double fullOpen = 14.0;
         public static final double fullClosed = 50.0;
 
-        public static final double closeCone = 44.0;
+        public static final double closeCone = 50.0;
         public static final double closeCube = 30.0;
     }
 
@@ -61,7 +60,7 @@ public final class Constants {
 
     // SWERVE
     public static class Swerve {
-        public static final boolean isTunable = true;
+        public static final boolean isTunable = false;
 
         public static final double maxTurnMultiplier = 0.5;
     
@@ -117,7 +116,7 @@ public final class Constants {
         public static final int driveContinuousCurrentLimit = 35;
         public static final int drivePeakCurrentLimit = 60;
         public static final double drivePeakCurrentDuration = 0.1;
-        public static final boolean driveEnableCurrentLimit = true;
+        public static final boolean driveEnableCurrentLimit = false;
         public static final NeutralMode driveNeutralMode = NeutralMode.Brake;
         public static final IdleMode turnNeutralMode = IdleMode.kCoast;
 

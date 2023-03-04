@@ -44,14 +44,15 @@ public class LimelightSubsystem extends SubsystemBase {
 	public boolean isTarget() {
 		return getValue("tv").getDouble(0.0) == 1;
 	}
-
+	public double getRawTx() {
+		return getValue("tx").getDouble(0.0);
+	}
 	/**
 	 * Horizontal offset from crosshair to target (-27 degrees to 27 degrees).
 	 * 
 	 * @return tx as reported by the Limelight.
 	 */
 	public double getTx() {
-		kp = SmartDashboard.getNumber("ll kp", kp);
 		double output = getValue("tx").getDouble(0.0) * kp;
 		if (Math.abs(output) >= Constants.LimeLightConstants.limelightMaxSpeed) {
 			output = Constants.LimeLightConstants.limelightMaxSpeed * Math.signum(output);

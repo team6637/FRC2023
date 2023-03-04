@@ -4,10 +4,12 @@
 
 package frc.robot;
 
+import frc.robot.commands.AutoAlignCommand;
 import frc.robot.commands.AutonLevelCommand;
 import frc.robot.commands.SwerveTeleopCommand;
 import frc.robot.commands.autos.AutonChargeStationCommand;
 import frc.robot.commands.autos.AutonOneCommand;
+import frc.robot.commands.autos.AutonThreeCommand;
 import frc.robot.subsystems.ArmSubsystem;
 import frc.robot.subsystems.DistanceSensorSubsystem;
 import frc.robot.subsystems.ExtenderSubsystem;
@@ -38,6 +40,7 @@ public class RobotContainer {
     public final LimelightSubsystem m_limelightSubsystem = new LimelightSubsystem();
     private final GripperSubsystem m_gripperSubsystem = new GripperSubsystem();
     private final LEDSubsystem m_ledSubsystem = new LEDSubsystem();
+    private final DistanceSensorSubsystem m_DistanceSensorSubsystem = new DistanceSensorSubsystem();
     private final Joystick driverStick = new Joystick(0);
     private final Joystick controlStick = new Joystick(1);
     private String mode = "cube";
@@ -59,10 +62,10 @@ public class RobotContainer {
             )
         );
         
-        m_chooser.setDefaultOption("Default (does nothing)", new InstantCommand());
-        m_chooser.addOption("Auton 1 (Main)", new AutonOneCommand(m_swerve, m_armSubsystem, m_extenderSubsystem, m_gripperSubsystem, m_limelightSubsystem, false));
+        m_chooser.setDefaultOption("Auton 1 (Main)", new AutonOneCommand(m_swerve, m_armSubsystem, m_extenderSubsystem, m_gripperSubsystem, m_limelightSubsystem));
         m_chooser.addOption("Auton 2 Charge Station", new AutonChargeStationCommand(m_swerve, m_armSubsystem, m_extenderSubsystem, m_gripperSubsystem, m_limelightSubsystem));
-        m_chooser.addOption("Auton 3", new AutonOneCommand(m_swerve, m_armSubsystem, m_extenderSubsystem, m_gripperSubsystem, m_limelightSubsystem, true));
+        m_chooser.addOption("Auton 3", new AutonThreeCommand(m_swerve, m_armSubsystem, m_extenderSubsystem, m_gripperSubsystem, m_limelightSubsystem));
+        m_chooser.addOption("(DO NOT USE!) Test Auto Align", new AutoAlignCommand(m_limelightSubsystem, m_swerve));
 
         SmartDashboard.putData(m_chooser);
 
@@ -76,12 +79,15 @@ public class RobotContainer {
 
         new JoystickButton(driverStick, 9).whileTrue(new RunCommand(() -> m_extenderSubsystem.retract())).onFalse(new InstantCommand(() -> m_extenderSubsystem.stop()));
 
-        // ARM
+        // ARM (DRIVER STICK)
         new JoystickButton(driverStick, 5).whileTrue(new RunCommand(() -> m_armSubsystem.raise())).onFalse(new InstantCommand(() -> m_armSubsystem.stop()));
 
         new JoystickButton(driverStick, 10).whileTrue(new RunCommand(() -> m_armSubsystem.lower())).onFalse(new InstantCommand(() -> m_armSubsystem.stop()));
 
+        // ARM (CONTROL STICK)
+        new JoystickButton(controlStick, 8).whileTrue(new RunCommand(() -> m_armSubsystem.raise())).onFalse(new InstantCommand(() -> m_armSubsystem.stop()));
 
+        new JoystickButton(controlStick, 10).whileTrue(new RunCommand(() -> m_armSubsystem.lower())).onFalse(new InstantCommand(() -> m_armSubsystem.stop()));
 
         // SET LOW
         new JoystickButton(controlStick, 11).onTrue(new SequentialCommandGroup(
@@ -115,9 +121,18 @@ public class RobotContainer {
             ),
             new WaitCommand(0.1),
             new WaitUntilCommand(() -> m_armSubsystem.atSetpoint()),
-            new InstantCommand(() -> m_extenderSubsystem.setSetpoint(155))
+            new InstantCommand(() -> m_extenderSubsystem.setSetpoint(150))
         ));
 
+
+        // SET LOW WITH OBJECT
+        new JoystickButton(controlStick, 12).onTrue(new SequentialCommandGroup(
+            new InstantCommand(() ->  m_extenderSubsystem.setSetpoint(0)),
+            new WaitCommand(0.1),
+            new WaitUntilCommand(() -> m_extenderSubsystem.atSetpoint()),
+            new InstantCommand(() -> m_armSubsystem.setSetpoint(-50.0)),
+            new WaitUntilCommand(() -> m_armSubsystem.atSetpoint())
+        ));
 
 
         // GRIPPER
@@ -150,10 +165,8 @@ public class RobotContainer {
         // April Tag & Reflective Tape Detection
         new JoystickButton(driverStick, 7).whileTrue(new RunCommand(() -> m_limelightSubsystem.setVisionMode(mode))).onFalse(new InstantCommand(() -> m_limelightSubsystem.setVisionMode("off")));
 
-
-
         //Test balence
-        new JoystickButton(controlStick, 8).whileTrue(new AutonLevelCommand(m_swerve));
+        // new JoystickButton(controlStick, 8).whileTrue(new AutonLevelCommand(m_swerve));
 
         // POV fine control
         new POVButton(driverStick, 0).whileTrue(new RunCommand(() -> m_extenderSubsystem.extend()));

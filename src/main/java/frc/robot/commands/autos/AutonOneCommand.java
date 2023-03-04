@@ -5,12 +5,9 @@
 package frc.robot.commands.autos;
 
 import edu.wpi.first.math.controller.PIDController;
-import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
-import edu.wpi.first.wpilibj2.command.ParallelRaceGroup;
+import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
@@ -28,14 +25,11 @@ import com.pathplanner.lib.PathPlannerTrajectory;
 import com.pathplanner.lib.commands.PPSwerveControllerCommand;
 
 public class AutonOneCommand extends SequentialCommandGroup {
-    public AutonOneCommand(Swerve swerve, ArmSubsystem arm, ExtenderSubsystem extender, GripperSubsystem gripper, LimelightSubsystem vision, Boolean isAuton3) {
+    public AutonOneCommand(Swerve swerve, ArmSubsystem arm, ExtenderSubsystem extender, GripperSubsystem gripper, LimelightSubsystem vision) {
 
-        double initialXPosition = isAuton3 ? 1.87 : 1.87;
-        double initialYPosition = isAuton3 ? 1.05 : 4.44;
         
         // DRIVE TO OBJECT
-        String path1 = isAuton3 ? "auton3" : "auton1";
-        PathPlannerTrajectory trajectory1 = PathPlanner.loadPath(path1, Constants.Swerve.maxSpeed, Constants.Swerve.maxAccelerationMetersPerSecond);
+        PathPlannerTrajectory trajectory1 = PathPlanner.loadPath("auton1", Constants.Swerve.maxSpeed, Constants.Swerve.maxAccelerationMetersPerSecond);
 
         PPSwerveControllerCommand swerveControllerCommand1 = new PPSwerveControllerCommand(
             trajectory1,
@@ -49,8 +43,7 @@ public class AutonOneCommand extends SequentialCommandGroup {
             swerve
         );
 
-        String path2 = isAuton3 ? "auton3back" : "auton1back";
-        PathPlannerTrajectory trajectory2 = PathPlanner.loadPath(path2, Constants.Swerve.maxSpeed, Constants.Swerve.maxAccelerationMetersPerSecond);
+        PathPlannerTrajectory trajectory2 = PathPlanner.loadPath("auton1back", Constants.Swerve.maxSpeed, Constants.Swerve.maxAccelerationMetersPerSecond);
 
         PPSwerveControllerCommand swerveControllerCommand2 = new PPSwerveControllerCommand(
             trajectory2,
@@ -67,7 +60,8 @@ public class AutonOneCommand extends SequentialCommandGroup {
         addCommands(
 
             // SET ROBOT POSE
-            new InstantCommand(() -> swerve.resetOdometry(new Pose2d(initialXPosition, initialYPosition, new Rotation2d(Math.toRadians(180.0))))),
+            //new InstantCommand(() -> swerve.resetOdometry(new Pose2d(initialXPosition, initialYPosition, new Rotation2d(Math.toRadians(180.0))))),
+            new InstantCommand(() -> swerve.resetOdometryForState(trajectory1.getInitialState(),  new Rotation2d(Math.toRadians(180.0)))),
 
             // LIFT ARM
             new InstantCommand(() -> gripper.setSetpoint(Constants.GripperConstants.closeCube)),
@@ -76,8 +70,8 @@ public class AutonOneCommand extends SequentialCommandGroup {
             new WaitUntilCommand(() -> arm.atSetpoint()),
             new InstantCommand(() -> extender.setSetpoint(120)),
             
-            // DRIVE FORWARD 1 FOOT
-            new DriveStraightCommand(swerve, -0.1, true),
+            // DRIVE FORWARD
+            new DriveStraightCommand(swerve, -0.1, true, 0.0),
 
             // DROP OBJECT
             new WaitUntilCommand(() -> extender.atSetpoint()),
@@ -85,44 +79,41 @@ public class AutonOneCommand extends SequentialCommandGroup {
             new WaitCommand(0.5),
 
             // DRIVE BACK 1 FOOT
-            new DriveStraightCommand(swerve, 0.3, true),
+            new DriveStraightCommand(swerve, 0.3, true, 0.0),
 
-            new TurnCommand(swerve, 0.0),
+            // RESET ARM
+            new InstantCommand(() ->  extender.setSetpoint(0)),
+            new WaitCommand(0.1),
+            new WaitUntilCommand(() -> extender.atSetpoint()),
+            new InstantCommand(() -> gripper.setSetpoint(20)),
+            new InstantCommand(() -> arm.setSetpoint(Constants.ArmConstants.minAngle)),
+            new WaitCommand(0.1),
+            new WaitUntilCommand(() -> arm.atSetpoint()),
+            new InstantCommand(() -> gripper.setSetpoint(Constants.GripperConstants.fullOpen)),
+
+            new TurnCommand(swerve, 0.0).withTimeout(3.0),
 
             // DRIVE TO OBJECT
-            new ParallelRaceGroup(
-                swerveControllerCommand1,
-                new SequentialCommandGroup(
-                    // RESET ARM
-                    new InstantCommand(() ->  extender.setSetpoint(0)),
-                    new WaitCommand(0.1),
-                    new WaitUntilCommand(() -> extender.atSetpoint()),
-                    new InstantCommand(() -> gripper.setSetpoint(20)),
-                    new InstantCommand(() -> arm.setSetpoint(Constants.ArmConstants.minAngle)),
-                    new WaitCommand(0.1),
-                    new WaitUntilCommand(() -> arm.atSetpoint()),
-                    new InstantCommand(() -> gripper.setSetpoint(Constants.GripperConstants.fullOpen))
-                )
-            ),
-
+            swerveControllerCommand1,
+   
             // VISION CORRECTION
             new InstantCommand(()->vision.setVisionMode("object"), vision),
             new SwerveTeleopCommand(swerve, ()->0.0, ()->0.0, ()->0.0, ()->vision.getTx(), ()->1.0, true),
-            new InstantCommand(()->vision.setVisionMode("off"), vision),
+            new InstantCommand(()->vision.setVisionMode("off"), vision)
 
-            // Lift Arm
-            new InstantCommand(() ->  arm.setSetpoint(-55.0)),
+            // // Lift Arm
+            // new InstantCommand(() ->  arm.setSetpoint(-55.0)),
 
-            // Drive Forward
-            new DriveStraightCommand(swerve, 0.78, false),
+            // // Drive Forward
+            // new DriveStraightCommand(swerve, 0.78, false, 0.0),
 
-            // CLOSE GRIPPER
-            new InstantCommand(() -> gripper.setSetpoint(Constants.GripperConstants.closeCone)),
-            new WaitCommand(0.8),
-            new InstantCommand(() ->  arm.setSetpoint(-30.0)),
+            // // CLOSE GRIPPER
+            // new InstantCommand(() -> gripper.setSetpoint(Constants.GripperConstants.closeCone)),
+            // new WaitCommand(0.8),
+            // new InstantCommand(() ->  arm.setSetpoint(-30.0)),
 
-            // FOLLOW PATH BACK
-            swerveControllerCommand2,
+            // // FOLLOW PATH BACK
+            // swerveControllerCommand2,
 
             // TURN AROUND
            // new TurnCommand(swerve, 180.0),
@@ -133,29 +124,29 @@ public class AutonOneCommand extends SequentialCommandGroup {
             // new InstantCommand(()-> vision.setVisionMode("off"), vision),
 
             // PLACE CONE
-            new InstantCommand(() -> gripper.setSetpoint(Constants.GripperConstants.closeCone)),
-            new InstantCommand(() ->  arm.setSetpoint(30.0)),
-            new WaitCommand(0.1),
-            new WaitUntilCommand(() -> arm.atSetpoint()),
-            new InstantCommand(() -> extender.setSetpoint(155)),
+        //     new InstantCommand(() -> gripper.setSetpoint(Constants.GripperConstants.closeCone)),
+        //     new InstantCommand(() ->  arm.setSetpoint(30.0)),
+        //     new WaitCommand(0.1),
+        //     new WaitUntilCommand(() -> arm.atSetpoint()),
+        //     new InstantCommand(() -> extender.setSetpoint(155)),
             
-            // DRIVE FORWARD 1 FOOT
-            new DriveStraightCommand(swerve, -0.3, true),
+        //     // DRIVE FORWARD 1 FOOT
+        //     new DriveStraightCommand(swerve, -0.3, true, 0.0),
 
-            // DROP OBJECT
-            new WaitUntilCommand(() -> extender.atSetpoint()),
-            new InstantCommand(() -> gripper.autonSetSetpoint(Constants.GripperConstants.fullOpenWhenExtended)),
-            new WaitCommand(0.1),
+        //     // DROP OBJECT
+        //     new WaitUntilCommand(() -> extender.atSetpoint()),
+        //     new InstantCommand(() -> gripper.autonSetSetpoint(Constants.GripperConstants.fullOpenWhenExtended)),
+        //     new WaitCommand(0.1),
 
-            // RESET ARM
-            new InstantCommand(() ->  extender.setSetpoint(0)),
-            new WaitCommand(0.1),
-            new WaitUntilCommand(() -> extender.atSetpoint()),
-            new InstantCommand(() -> gripper.setSetpoint(20)),
-            new InstantCommand(() -> arm.setSetpoint(Constants.ArmConstants.minAngle)),
-            new WaitCommand(0.1),
-            new WaitUntilCommand(() -> arm.atSetpoint()),
-            new InstantCommand(() -> gripper.setSetpoint(Constants.GripperConstants.fullOpen))
+        //     // RESET ARM
+        //     new InstantCommand(() ->  extender.setSetpoint(0)),
+        //     new WaitCommand(0.1),
+        //     new WaitUntilCommand(() -> extender.atSetpoint()),
+        //     new InstantCommand(() -> gripper.setSetpoint(20)),
+        //     new InstantCommand(() -> arm.setSetpoint(Constants.ArmConstants.minAngle)),
+        //     new WaitCommand(0.1),
+        //     new WaitUntilCommand(() -> arm.atSetpoint()),
+        //     new InstantCommand(() -> gripper.setSetpoint(Constants.GripperConstants.fullOpen))
         );
     }
 }

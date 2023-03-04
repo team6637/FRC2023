@@ -21,15 +21,18 @@ public class DriveStraightCommand extends CommandBase {
   double kp = 0.5;
   PIDController pid = new PIDController(kp, 0.0, 0.0);
   boolean isBackwards;
+  double maxSpeed = 0.2;
+  double additionalMaxSpeed;
 
   double angleKp = 0.01;
   PIDController anglePid = new PIDController(angleKp, 0.0, 0.0);
   double initialHeading;
   
-  public DriveStraightCommand(Swerve swerve, double targetX, boolean isBackwards) {
+  public DriveStraightCommand(Swerve swerve, double targetX, boolean isBackwards, double additionalMaxSpeed) {
     this.swerve = swerve;
     this.targetX = targetX;
     this.isBackwards = isBackwards;
+    this.maxSpeed += additionalMaxSpeed;
     addRequirements(swerve);
   }
 
@@ -57,8 +60,8 @@ public class DriveStraightCommand extends CommandBase {
 
     output = output + 0.1 * Math.signum(output);
 
-    if (Math.abs(output) > 0.2) {
-      output = 0.2 * Math.signum(output);
+    if (Math.abs(output) > maxSpeed) {
+      output = maxSpeed * Math.signum(output);
     }
 
     output = output * Constants.Swerve.maxSpeed;
@@ -72,9 +75,10 @@ public class DriveStraightCommand extends CommandBase {
       zOutput = 0.3 * Math.signum(zOutput);
     }
     zOutput = zOutput * Constants.Swerve.maxAngularVelocity;
+    if(!isBackwards) zOutput *= -1.0;
 
 
-    ChassisSpeeds chassisSpeeds = new ChassisSpeeds(output, 0.0, 0.0);
+    ChassisSpeeds chassisSpeeds = new ChassisSpeeds(output, 0.0, zOutput);
     SwerveModuleState[] moduleStates = Constants.Swerve.swerveKinematics.toSwerveModuleStates(chassisSpeeds);
     swerve.setModuleStates(moduleStates);
 

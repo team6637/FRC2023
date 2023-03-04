@@ -5,6 +5,8 @@
 package frc.robot.subsystems;
 
 import com.ctre.phoenix.sensors.Pigeon2;
+import com.pathplanner.lib.PathPlannerTrajectory;
+import com.pathplanner.lib.PathPlannerTrajectory.PathPlannerState;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -12,6 +14,7 @@ import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -71,7 +74,6 @@ public class Swerve extends SubsystemBase {
 
   }
 
-
   public void zeroGyroscope() {
       gyro.setYaw(0.0);
   }
@@ -114,6 +116,12 @@ public class Swerve extends SubsystemBase {
   }
 
   public void resetOdometry(Pose2d pose) {
+    odometry.resetPosition(getGyroscopeRotation(), getPositions(), pose);
+  }
+
+  public void resetOdometryForState(PathPlannerState state, Rotation2d rotation) {
+    state = PathPlannerTrajectory.transformStateForAlliance( state, DriverStation.getAlliance());
+    Pose2d pose = new Pose2d(state.poseMeters.getTranslation(), rotation);
     odometry.resetPosition(getGyroscopeRotation(), getPositions(), pose);
   }
 

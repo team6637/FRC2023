@@ -18,7 +18,7 @@ public class GripperSubsystem extends SubsystemBase {
   CANSparkMax motor = new CANSparkMax(Constants.GripperConstants.GRIPPER_MOTOR_PORT, MotorType.kBrushless);
   DutyCycleEncoder throughboreEncoder = new DutyCycleEncoder(1);
 
-  private final double encoderOffset = 220.0;
+  private final double encoderOffset = 225.0;
   private double kp = 0.01; // 0.025
   private final boolean usingPID  = true;
   private double setpoint = Constants.GripperConstants.fullOpen;

@@ -14,7 +14,7 @@ import frc.robot.subsystems.Swerve;
 public class TurnCommand extends CommandBase {
   Swerve swerve;
   double setpoint;
-  double kp = 0.019;
+  double kp = 0.025; //0.019
   double error;
   int timer = 0;
 
@@ -40,7 +40,7 @@ public class TurnCommand extends CommandBase {
 
     error = setpoint - currentAngle;
 
-    if(error < 2.0) timer++;
+    if(Math.abs(error) < 2.0) timer++;
 
     double output = kp * error;
 
