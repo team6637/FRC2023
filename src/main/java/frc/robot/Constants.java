@@ -12,6 +12,7 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.trajectory.TrajectoryConfig;
 import edu.wpi.first.math.util.Units;
+import frc.lib.betaLib.PidConfig;
 import frc.lib.config.SwerveModuleConstants;
 import frc.lib.util.COTSFalconSwerveConstants;
 
@@ -41,17 +42,22 @@ public final class Constants {
     }
 
     // GRIPPER
-    public static class GripperConstants {
+    public static class Gripper {
         public static final int GRIPPER_MOTOR_PORT = 34;
 
-        public static final boolean isTunable = false;
+        public static final boolean isTunable = true;
 
         public static final double fullOpenWhenExtended = -1.0;
         public static final double fullOpen = 14.0;
         public static final double fullClosed = 50.0;
 
-        public static final double closeCone = 50.0;
+        public static final double closeCone = 60.0;
         public static final double closeCube = 30.0;
+
+        public static final double encoderOffset = 225.0;
+
+        public static final double setpointIncrementer = 0.8;
+
     }
 
     public static class LimeLightConstants {

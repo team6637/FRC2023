@@ -64,7 +64,7 @@ public class AutonOneCommand extends SequentialCommandGroup {
             new InstantCommand(() -> swerve.resetOdometryForState(trajectory1.getInitialState(),  new Rotation2d(Math.toRadians(180.0)))),
 
             // LIFT ARM
-            new InstantCommand(() -> gripper.setSetpoint(Constants.GripperConstants.closeCube)),
+            new InstantCommand(() -> gripper.setSetpoint(Constants.Gripper.closeCube)),
             new InstantCommand(() ->  arm.setSetpoint(14.0)),
             new WaitCommand(0.1),
             new WaitUntilCommand(() -> arm.atSetpoint()),
@@ -75,7 +75,7 @@ public class AutonOneCommand extends SequentialCommandGroup {
 
             // DROP OBJECT
             new WaitUntilCommand(() -> extender.atSetpoint()),
-            new InstantCommand(() -> gripper.autonSetSetpoint(Constants.GripperConstants.fullOpenWhenExtended)),
+            new InstantCommand(() -> gripper.autonSetSetpoint(Constants.Gripper.fullOpenWhenExtended)),
             new WaitCommand(0.5),
 
             // DRIVE BACK 1 FOOT
@@ -89,7 +89,7 @@ public class AutonOneCommand extends SequentialCommandGroup {
             new InstantCommand(() -> arm.setSetpoint(Constants.ArmConstants.minAngle)),
             new WaitCommand(0.1),
             new WaitUntilCommand(() -> arm.atSetpoint()),
-            new InstantCommand(() -> gripper.setSetpoint(Constants.GripperConstants.fullOpen)),
+            new InstantCommand(() -> gripper.setSetpoint(Constants.Gripper.fullOpen)),
 
             new TurnCommand(swerve, 0.0).withTimeout(3.0),
 
@@ -108,7 +108,7 @@ public class AutonOneCommand extends SequentialCommandGroup {
             // new DriveStraightCommand(swerve, 0.78, false, 0.0),
 
             // // CLOSE GRIPPER
-            // new InstantCommand(() -> gripper.setSetpoint(Constants.GripperConstants.closeCone)),
+            // new InstantCommand(() -> gripper.setSetpoint(Constants.Gripper.closeCone)),
             // new WaitCommand(0.8),
             // new InstantCommand(() ->  arm.setSetpoint(-30.0)),
 
@@ -124,7 +124,7 @@ public class AutonOneCommand extends SequentialCommandGroup {
             // new InstantCommand(()-> vision.setVisionMode("off"), vision),
 
             // PLACE CONE
-        //     new InstantCommand(() -> gripper.setSetpoint(Constants.GripperConstants.closeCone)),
+        //     new InstantCommand(() -> gripper.setSetpoint(Constants.Gripper.closeCone)),
         //     new InstantCommand(() ->  arm.setSetpoint(30.0)),
         //     new WaitCommand(0.1),
         //     new WaitUntilCommand(() -> arm.atSetpoint()),
@@ -135,7 +135,7 @@ public class AutonOneCommand extends SequentialCommandGroup {
 
         //     // DROP OBJECT
         //     new WaitUntilCommand(() -> extender.atSetpoint()),
-        //     new InstantCommand(() -> gripper.autonSetSetpoint(Constants.GripperConstants.fullOpenWhenExtended)),
+        //     new InstantCommand(() -> gripper.autonSetSetpoint(Constants.Gripper.fullOpenWhenExtended)),
         //     new WaitCommand(0.1),
 
         //     // RESET ARM
@@ -146,7 +146,7 @@ public class AutonOneCommand extends SequentialCommandGroup {
         //     new InstantCommand(() -> arm.setSetpoint(Constants.ArmConstants.minAngle)),
         //     new WaitCommand(0.1),
         //     new WaitUntilCommand(() -> arm.atSetpoint()),
-        //     new InstantCommand(() -> gripper.setSetpoint(Constants.GripperConstants.fullOpen))
+        //     new InstantCommand(() -> gripper.setSetpoint(Constants.Gripper.fullOpen))
         );
     }
 }

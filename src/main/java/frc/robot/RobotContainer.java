@@ -8,6 +8,7 @@ import frc.robot.commands.AutoAlignCommand;
 import frc.robot.commands.AutonLevelCommand;
 import frc.robot.commands.SwerveTeleopCommand;
 import frc.robot.commands.autos.AutonChargeStationCommand;
+import frc.robot.commands.autos.AutonChargeStationCommand2;
 import frc.robot.commands.autos.AutonOneCommand;
 import frc.robot.commands.autos.AutonThreeCommand;
 import frc.robot.subsystems.ArmSubsystem;
@@ -65,7 +66,7 @@ public class RobotContainer {
         m_chooser.setDefaultOption("Auton 1 (Main)", new AutonOneCommand(m_swerve, m_armSubsystem, m_extenderSubsystem, m_gripperSubsystem, m_limelightSubsystem));
         m_chooser.addOption("Auton 2 Charge Station", new AutonChargeStationCommand(m_swerve, m_armSubsystem, m_extenderSubsystem, m_gripperSubsystem, m_limelightSubsystem));
         m_chooser.addOption("Auton 3", new AutonThreeCommand(m_swerve, m_armSubsystem, m_extenderSubsystem, m_gripperSubsystem, m_limelightSubsystem));
-        m_chooser.addOption("(DO NOT USE!) Test Auto Align", new AutoAlignCommand(m_limelightSubsystem, m_swerve));
+        m_chooser.addOption("Auton 2 Charge Station 2", new AutonChargeStationCommand2(m_swerve, m_armSubsystem, m_extenderSubsystem, m_gripperSubsystem, m_limelightSubsystem));
 
         SmartDashboard.putData(m_chooser);
 
@@ -87,7 +88,9 @@ public class RobotContainer {
         // ARM (CONTROL STICK)
         new JoystickButton(controlStick, 8).whileTrue(new RunCommand(() -> m_armSubsystem.raise())).onFalse(new InstantCommand(() -> m_armSubsystem.stop()));
 
-        new JoystickButton(controlStick, 10).whileTrue(new RunCommand(() -> m_armSubsystem.lower())).onFalse(new InstantCommand(() -> m_armSubsystem.stop()));
+        //new JoystickButton(controlStick, 10).whileTrue(new RunCommand(() -> m_armSubsystem.lower())).onFalse(new InstantCommand(() -> m_armSubsystem.stop()));
+        new JoystickButton(controlStick, 10).onTrue(new InstantCommand(() -> m_armSubsystem.setSetpoint(14.89)));
+
 
         // SET LOW
         new JoystickButton(controlStick, 11).onTrue(new SequentialCommandGroup(
@@ -97,7 +100,7 @@ public class RobotContainer {
             new InstantCommand(() -> m_gripperSubsystem.setSetpoint(20)),
             new InstantCommand(() -> m_armSubsystem.setSetpoint(Constants.ArmConstants.minAngle)),
             new WaitUntilCommand(() -> m_armSubsystem.atSetpoint()),
-            new InstantCommand(() -> m_gripperSubsystem.setSetpoint(Constants.GripperConstants.fullOpen))
+            new InstantCommand(() -> m_gripperSubsystem.setSetpoint(Constants.Gripper.fullOpen))
         ));
 
         // SET MID
@@ -130,7 +133,7 @@ public class RobotContainer {
             new InstantCommand(() ->  m_extenderSubsystem.setSetpoint(0)),
             new WaitCommand(0.1),
             new WaitUntilCommand(() -> m_extenderSubsystem.atSetpoint()),
-            new InstantCommand(() -> m_armSubsystem.setSetpoint(-50.0)),
+            new InstantCommand(() -> m_armSubsystem.setSetpoint(-35.0)),
             new WaitUntilCommand(() -> m_armSubsystem.atSetpoint())
         ));
 
@@ -140,15 +143,15 @@ public class RobotContainer {
 
         new JoystickButton(driverStick, 3).whileTrue(
             new ConditionalCommand(
-                new InstantCommand(() -> m_gripperSubsystem.setSetpoint(Constants.GripperConstants.fullOpen)),
-                new InstantCommand(() -> m_gripperSubsystem.setSetpoint(Constants.GripperConstants.fullOpenWhenExtended)),
+                new InstantCommand(() -> m_gripperSubsystem.setSetpoint(Constants.Gripper.fullOpen)),
+                new InstantCommand(() -> m_gripperSubsystem.setSetpoint(Constants.Gripper.fullOpenWhenExtended)),
                 ()->m_armSubsystem.getDegrees() < -10.0
             )
         );
 
-        new JoystickButton(driverStick, 2).onTrue(new InstantCommand(() -> m_gripperSubsystem.setSetpoint(Constants.GripperConstants.closeCone)));
+        new JoystickButton(driverStick, 2).onTrue(new InstantCommand(() -> m_gripperSubsystem.setSetpoint(Constants.Gripper.closeCone)));
 
-        new JoystickButton(driverStick, 4).onTrue(new InstantCommand(() -> m_gripperSubsystem.setSetpoint(Constants.GripperConstants.closeCube)));
+        new JoystickButton(driverStick, 4).onTrue(new InstantCommand(() -> m_gripperSubsystem.setSetpoint(Constants.Gripper.closeCube)));
 
 
 
