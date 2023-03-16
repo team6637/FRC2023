@@ -5,14 +5,12 @@
 package frc.robot;
 
 import com.ctre.phoenix.motorcontrol.NeutralMode;
-import com.pathplanner.lib.PathConstraints;
 import com.revrobotics.CANSparkMax.IdleMode;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.trajectory.TrajectoryConfig;
 import edu.wpi.first.math.util.Units;
-import frc.lib.betaLib.PidConfig;
 import frc.lib.config.SwerveModuleConstants;
 import frc.lib.util.COTSFalconSwerveConstants;
 
@@ -25,10 +23,12 @@ public final class Constants {
         public static final int RIGHT_ARM_PORT = 39;
         public static final int ENCODER_PORT = 0;
 
-        public static final boolean isTunable = true;
-
         public static final double minAngle = -62.0;
         public static final double maxAngle = 40.0;
+
+        public static final double angleOffset = 110.7;
+
+        public static final boolean isTunable = false;
     }
 
     // EXTENDER
@@ -37,15 +37,12 @@ public final class Constants {
         public static final double EXTENDER_MIN_EXTENSION = 0.0;
         public static final double EXTENDER_MAX_EXTENSION = 155.0; 
 
-        public static final boolean isTunable = true;
-
+        public static final boolean isTunable = false;
     }
 
     // GRIPPER
-    public static class Gripper {
+    public static class GripperConstants {
         public static final int GRIPPER_MOTOR_PORT = 34;
-
-        public static final boolean isTunable = true;
 
         public static final double fullOpenWhenExtended = -1.0;
         public static final double fullOpen = 14.0;
@@ -57,11 +54,31 @@ public final class Constants {
         public static final double encoderOffset = 225.0;
 
         public static final double setpointIncrementer = 0.8;
-
+        
+        public static final boolean isTunable = false;
     }
 
     public static class LimeLightConstants {
         public static final double limelightMaxSpeed = 0.3;
+
+        public static final boolean isTunable = false;
+    }
+
+    public static class DistanceSensorConstants {
+        public static final boolean isTunable = false;
+    }
+
+    public static class AutonConstants {
+        public static final boolean AutoAlignIsTunable = false;
+    }
+
+    public static class CommandConstants {
+        public static final boolean levelRollIsTunible = false;
+        public static final boolean levelYawIsTunible = false;
+
+        public static final boolean driveStraightIsTunible = false;
+
+        public static final boolean turnIsTunible = true;
     }
 
     // SWERVE
@@ -78,7 +95,7 @@ public final class Constants {
         public static final double openLoopRamp = 0.25;
         public static final double closedLoopRamp = 0.0;
     
-         /* Swerve Profiling Values */
+        /* Swerve Profiling Values */
         /** Meters per Second */
         public static final double maxSpeed = 2.0;
 

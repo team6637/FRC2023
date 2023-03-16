@@ -9,6 +9,7 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.CommandBase;
+import frc.lib.betaLib.PidConfig;
 import frc.robot.Constants;
 import frc.robot.subsystems.Swerve;
 
@@ -16,17 +17,23 @@ import frc.robot.subsystems.Swerve;
 public class DriveStraightCommand extends CommandBase {
   
   Swerve swerve;
+
   double setpoint;
   double targetX;
-  double kp = 0.5;
-  PIDController pid = new PIDController(kp, 0.0, 0.0);
-  boolean isBackwards;
+  double forwardKp = 0.5;
+  double angleKp = 0.01;
   double maxSpeed = 0.2;
   double additionalMaxSpeed;
-
-  double angleKp = 0.01;
-  PIDController anglePid = new PIDController(angleKp, 0.0, 0.0);
   double initialHeading;
+  double xOutput;
+  double zOutput;
+  double currentX;
+  boolean isBackwards;
+
+  PidConfig forwardPidConfig = new PidConfig("driveStraightForward", forwardKp, Constants.CommandConstants.driveStraightIsTunible);
+  PidConfig anglePidConfig = new PidConfig("driveStrightAngle", angleKp, Constants.CommandConstants.driveStraightIsTunible);
+  PIDController forwardPid = new PIDController(forwardKp, 0.0, 0.0);
+  PIDController anglePid = new PIDController(angleKp, 0.0, 0.0);
   
   public DriveStraightCommand(Swerve swerve, double targetX, boolean isBackwards, double additionalMaxSpeed) {
     this.swerve = swerve;
@@ -39,8 +46,7 @@ public class DriveStraightCommand extends CommandBase {
   // Called when the command is initially scheduled.
   @Override
   public void initialize() {
-    SmartDashboard.putNumber("drive straight kp", kp);
-    pid.setTolerance(.01);
+    forwardPid.setTolerance(.01);
     this.setpoint = swerve.getPose().getX() + targetX;
     initialHeading = swerve.getHeading();
   }
@@ -48,29 +54,35 @@ public class DriveStraightCommand extends CommandBase {
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
-    // kp = SmartDashboard.getNumber("drive straight kp", kp);
-    // pid.setP(kp);
-    double currentX = swerve.getPose().getX();
-    double output = pid.calculate(currentX, setpoint);
+    if (Constants.CommandConstants.driveStraightIsTunible) {
+      SmartDashboard.putNumber("driveStraight xOutput", xOutput);
+      SmartDashboard.putNumber("driveStraight zOutput", zOutput);
+      SmartDashboard.putNumber("driveStraight currentX", currentX);
+      SmartDashboard.putNumber("driveStraight error", forwardPid.getPositionError());
+      SmartDashboard.putNumber("driveStraight setpoint", setpoint);
 
-    SmartDashboard.putNumber("drive straight output", output);
-    SmartDashboard.putNumber("drive straight currentX", currentX);
-    SmartDashboard.putNumber("drive straight error", pid.getPositionError());
-    SmartDashboard.putNumber("drive straight setpoint", setpoint);
-
-    output = output + 0.1 * Math.signum(output);
-
-    if (Math.abs(output) > maxSpeed) {
-      output = maxSpeed * Math.signum(output);
+      forwardPidConfig.updateFromSmartDashboard();
+      anglePidConfig.updateFromSmartDashboard();
     }
 
-    output = output * Constants.Swerve.maxSpeed;
-    if(isBackwards) output = output * -1.0;
+    currentX = swerve.getPose().getX();
+    xOutput = forwardPid.calculate(currentX, setpoint);
 
-    SmartDashboard.putNumber("drive straight final output", output);
+    xOutput = xOutput + 0.1 * Math.signum(xOutput);
+
+    if (Math.abs(xOutput) > maxSpeed) {
+      xOutput = maxSpeed * Math.signum(xOutput);
+    }
+
+    xOutput = xOutput * Constants.Swerve.maxSpeed;
+    if(isBackwards) xOutput = xOutput * -1.0;
+
+    if (Constants.CommandConstants.driveStraightIsTunible) {
+      SmartDashboard.putNumber("drive straight final xOutput", xOutput);
+    }
 
 
-    double zOutput = anglePid.calculate(swerve.getHeading(), initialHeading);
+    zOutput = anglePid.calculate(swerve.getHeading(), initialHeading);
     if (Math.abs(zOutput) > 0.3) {
       zOutput = 0.3 * Math.signum(zOutput);
     }
@@ -78,7 +90,7 @@ public class DriveStraightCommand extends CommandBase {
     if(!isBackwards) zOutput *= -1.0;
 
 
-    ChassisSpeeds chassisSpeeds = new ChassisSpeeds(output, 0.0, zOutput);
+    ChassisSpeeds chassisSpeeds = new ChassisSpeeds(xOutput, 0.0, zOutput);
     SwerveModuleState[] moduleStates = Constants.Swerve.swerveKinematics.toSwerveModuleStates(chassisSpeeds);
     swerve.setModuleStates(moduleStates);
 
@@ -93,6 +105,6 @@ public class DriveStraightCommand extends CommandBase {
   // Returns true when the command should end.
   @Override
   public boolean isFinished() {
-    return pid.atSetpoint();
+    return forwardPid.atSetpoint();
   }
 }

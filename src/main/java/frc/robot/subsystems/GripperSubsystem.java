@@ -8,8 +8,6 @@ import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 
 import edu.wpi.first.math.controller.PIDController;
-import edu.wpi.first.math.controller.ProfiledPIDController;
-import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.wpilibj.DutyCycleEncoder;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -18,10 +16,12 @@ import frc.robot.Constants;
 
 public class GripperSubsystem extends SubsystemBase {
 
-  CANSparkMax motor = new CANSparkMax(Constants.Gripper.GRIPPER_MOTOR_PORT, MotorType.kBrushless);
+  CANSparkMax motor = new CANSparkMax(Constants.GripperConstants.GRIPPER_MOTOR_PORT, MotorType.kBrushless);
   DutyCycleEncoder throughboreEncoder = new DutyCycleEncoder(1);
 
-  private double setpoint = Constants.Gripper.fullOpen;
+  private double setpoint = Constants.GripperConstants.fullOpen;
+  private double output;
+  private double maxPower = 0.25;
 
   public static final PidConfig pidConfig = new PidConfig("gripper", 0.01, 0.0, 0.0, true);
   PIDController pid = new PIDController(pidConfig.getKp(), pidConfig.getKi(), pidConfig.getKd());
@@ -34,14 +34,14 @@ public class GripperSubsystem extends SubsystemBase {
   }
 
   public double getEncoderPos() {
-    return (throughboreEncoder.getAbsolutePosition())*360.0 - Constants.Gripper.encoderOffset;
+    return (throughboreEncoder.getAbsolutePosition())*360.0 - Constants.GripperConstants.encoderOffset;
   }
 
   public void setSetpoint(double newSetpoint) {
-    if (newSetpoint < Constants.Gripper.fullOpenWhenExtended) {
-      setpoint = Constants.Gripper.fullOpenWhenExtended;
-    } else if (newSetpoint > Constants.Gripper.fullClosed) {
-      setpoint = Constants.Gripper.fullClosed;
+    if (newSetpoint < Constants.GripperConstants.fullOpenWhenExtended) {
+      setpoint = Constants.GripperConstants.fullOpenWhenExtended;
+    } else if (newSetpoint > Constants.GripperConstants.fullClosed) {
+      setpoint = Constants.GripperConstants.fullClosed;
     } else {
       setpoint = newSetpoint;
     }
@@ -52,11 +52,11 @@ public class GripperSubsystem extends SubsystemBase {
   }
 
   public void closeGripper() {
-      setSetpoint(setpoint += Constants.Gripper.setpointIncrementer);
+      setSetpoint(setpoint += Constants.GripperConstants.setpointIncrementer);
   }
 
   public void openGripper() {
-    setSetpoint(setpoint -= Constants.Gripper.setpointIncrementer);
+    setSetpoint(setpoint -= Constants.GripperConstants.setpointIncrementer);
   }
 
   public void stop() {
@@ -65,18 +65,15 @@ public class GripperSubsystem extends SubsystemBase {
 
   @Override
   public void periodic() {
-    if (Constants.Gripper.isTunable) {
-      pidConfig.updateFromSmartDashboard();
-
+    if (Constants.GripperConstants.isTunable) {
       SmartDashboard.putNumber("gripper encoder", getEncoderPos());
       SmartDashboard.putNumber("gripper setpoint", setpoint);
 
-      pid.setP(pidConfig.getKp());
+      pidConfig.updateFromSmartDashboard();
     }
 
-    double output = pid.calculate(getEncoderPos(), setpoint);
+    output = pid.calculate(getEncoderPos(), setpoint);
 
-    double maxPower = 0.25;
     if(getEncoderPos() > 31.0) maxPower = 0.7;
     if(Math.abs(output) > maxPower) output = maxPower * Math.signum(output);
 

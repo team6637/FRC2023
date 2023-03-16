@@ -9,33 +9,42 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.CommandBase;
+import frc.lib.betaLib.PidConfig;
 import frc.robot.Constants;
 import frc.robot.subsystems.Swerve;
 
-public class AutonLevelCommand extends CommandBase {
+public class AutoLevelCommand extends CommandBase {
+
+  Swerve swerve;
 
   double rollKp = 0.017;
-  double yawKp = 0.01;
+  double yawKp = 0.017;
   double maxSpeed;
   double slowMaxSpeed = 0.08;
+  double initialHeading;
   boolean hasGoneBelowZeroOnce;
   boolean hasGoneBelowZeroTwice;
   int counter;
 
-  Swerve swerve;
-  PIDController rollPID = new PIDController(rollKp, 0.0, 0.0);
-  PIDController yawPID = new PIDController(rollKp, 0.0, 0.0);
-  double initialHeading;
+  PidConfig rollPidConfig = new PidConfig("AutonLevel-roll", rollKp, Constants.CommandConstants.levelRollIsTunible);
+  PidConfig yawPidConfig = new PidConfig("AutonLevel-yaw", yawKp, Constants.CommandConstants.levelYawIsTunible);
+  PIDController rollPID = new PIDController(rollPidConfig.getKp(), rollPidConfig.getKi(), rollPidConfig.getKd());
+  PIDController yawPID = new PIDController(yawPidConfig.getKp(), yawPidConfig.getKi(), yawPidConfig.getKd());
 
-  public AutonLevelCommand(Swerve swerve) {
+  public AutoLevelCommand(Swerve swerve) {
     this.swerve = swerve;
     addRequirements(swerve);
   }
 
   @Override
   public void initialize() {
-    SmartDashboard.putNumber("level roll rollKp", rollKp);    
-    SmartDashboard.putNumber("level yaw pid", yawKp);
+    if (Constants.CommandConstants.levelRollIsTunible) {
+      SmartDashboard.putNumber("level roll rollKp", rollKp);    
+    }
+    if (Constants.CommandConstants.levelYawIsTunible) {
+      SmartDashboard.putNumber("level yaw pid", yawKp);
+    }
+
     initialHeading = swerve.getHeading();
     counter = 0;
     hasGoneBelowZeroOnce = false;
@@ -58,26 +67,33 @@ public class AutonLevelCommand extends CommandBase {
       }
     }
 
+    //Calculate roll
     double xOutput = rollPID.calculate(swerve.getRoll(), 0.0 + swerve.initialRoll);
-
     if (Math.abs(xOutput) > maxSpeed) {
       xOutput = maxSpeed * Math.signum(xOutput);
     }
-
     xOutput = -xOutput * Constants.Swerve.maxSpeed;
+    
+    if (Constants.CommandConstants.levelRollIsTunible) {
+      SmartDashboard.putNumber("level roll error", rollPID.getPositionError());
+      SmartDashboard.putNumber("level roll output", xOutput);
 
-    // yawKp = SmartDashboard.getNumber("level yawKp", yawKp);
-    // yawPID.setP(yawKp);
+      rollPidConfig.updateFromSmartDashboard();
+    }
 
+    //Calculate yaw
     double zOutput = yawPID.calculate(swerve.getHeading(), initialHeading);
     if (Math.abs(zOutput) > 0.2) {
       zOutput = 0.2 * Math.signum(zOutput);
     }
     zOutput = zOutput * Constants.Swerve.maxAngularVelocity;
 
+    if (Constants.CommandConstants.levelYawIsTunible) {
+      SmartDashboard.putNumber("level yaw error", yawPID.getPositionError());
+      SmartDashboard.putNumber("level yaw output", zOutput);
 
-    SmartDashboard.putNumber("level error", rollPID.getPositionError());
-    SmartDashboard.putNumber("level output", xOutput);
+      yawPidConfig.updateFromSmartDashboard();
+    }
 
     ChassisSpeeds chassisSpeeds = new ChassisSpeeds(xOutput, 0.0, zOutput);
     SwerveModuleState[] moduleStates = Constants.Swerve.swerveKinematics.toSwerveModuleStates(chassisSpeeds);
@@ -96,7 +112,6 @@ public class AutonLevelCommand extends CommandBase {
     swerve.stopModules();
   }
 
-  // Returns true when the command should end.
   @Override
   public boolean isFinished() {
     return hasGoneBelowZeroOnce;

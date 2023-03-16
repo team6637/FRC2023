@@ -11,22 +11,20 @@ import frc.robot.Constants;
 import frc.robot.subsystems.Swerve;
 
 public class TurnWheelsCommand extends CommandBase {
-  /** Creates a new TurnWheelsCommand. */
+
   Swerve swerve;
   private int counter;
+
   public TurnWheelsCommand(Swerve swerve) {
-    // Use addRequirements() here to declare subsystem dependencies.
     addRequirements(swerve);
     this.swerve = swerve;
   }
 
-  // Called when the command is initially scheduled.
   @Override
   public void initialize() {
     counter = 0;
   }
 
-  // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
     counter++;
@@ -34,16 +32,15 @@ public class TurnWheelsCommand extends CommandBase {
     ChassisSpeeds chassisSpeeds = new ChassisSpeeds(0.0, 0.2, 0);
     SwerveModuleState[] moduleStates = Constants.Swerve.swerveKinematics.toSwerveModuleStates(chassisSpeeds);
     swerve.setModuleStates(moduleStates);
-
   }
 
-  // Called once the command ends or is interrupted.
   @Override
-  public void end(boolean interrupted) {}
+  public void end(boolean interrupted) {
+    swerve.stopModules();
+  }
 
-  // Returns true when the command should end.
   @Override
   public boolean isFinished() {
-    return counter > 25;
+    return counter > 15;
   }
 }

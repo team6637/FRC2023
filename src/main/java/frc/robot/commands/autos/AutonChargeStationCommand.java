@@ -12,7 +12,7 @@ import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import frc.robot.Constants;
-import frc.robot.commands.AutonLevelCommand;
+import frc.robot.commands.AutoLevelCommand;
 import frc.robot.commands.DriveStraightCommand;
 import frc.robot.commands.SwerveTeleopCommand;
 import frc.robot.subsystems.ArmSubsystem;
@@ -29,7 +29,7 @@ public class AutonChargeStationCommand extends SequentialCommandGroup {
             new InstantCommand(() -> swerve.resetOdometry(new Pose2d(1.87, 4.44, new Rotation2d(Math.toRadians(180.0))))),
 
             // LIFT ARM
-            new InstantCommand(() -> gripper.setSetpoint(Constants.Gripper.closeCube)),
+            new InstantCommand(() -> gripper.setSetpoint(Constants.GripperConstants.closeCube)),
             new InstantCommand(() ->  arm.setSetpoint(14.0)),
             new WaitCommand(0.1),
             new WaitUntilCommand(() -> arm.atSetpoint()),
@@ -40,20 +40,23 @@ public class AutonChargeStationCommand extends SequentialCommandGroup {
 
             // DROP OBJECT
             new WaitUntilCommand(() -> extender.atSetpoint()),
-            new InstantCommand(() -> gripper.autonSetSetpoint(Constants.Gripper.fullOpenWhenExtended)),
+            new InstantCommand(() -> gripper.autonSetSetpoint(Constants.GripperConstants.fullOpenWhenExtended)),
             new WaitCommand(0.5),
 
+            // DRIVE ONTO CHARGING STATION
             new DriveStraightCommand(swerve, 2.3, true, 0.1),
 
-            // DRIVE TO OBJECT
+            // DOES TWO THINGS AT ONCE
             new ParallelCommandGroup(
-                new AutonLevelCommand(swerve),
+
+                // AUTO LEVEL
+                new AutoLevelCommand(swerve),
 
                 // drive over
                 //new DriveStraightCommand(swerve, 1.8, true, 0.1),
 
+                // RESET ARM
                 new SequentialCommandGroup(
-                    // RESET ARM
                     new InstantCommand(() ->  extender.setSetpoint(0)),
                     new WaitCommand(0.1),
                     new WaitUntilCommand(() -> extender.atSetpoint()),
@@ -61,7 +64,7 @@ public class AutonChargeStationCommand extends SequentialCommandGroup {
                     new InstantCommand(() -> arm.setSetpoint(Constants.ArmConstants.minAngle)),
                     new WaitCommand(0.1),
                     new WaitUntilCommand(() -> arm.atSetpoint()),
-                    new InstantCommand(() -> gripper.setSetpoint(Constants.Gripper.fullOpen))
+                    new InstantCommand(() -> gripper.setSetpoint(Constants.GripperConstants.fullOpen))
                 )
             ),
 

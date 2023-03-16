@@ -4,23 +4,18 @@
 
 package frc.robot;
 
-import frc.robot.commands.AutoAlignCommand;
-import frc.robot.commands.AutonLevelCommand;
 import frc.robot.commands.SwerveTeleopCommand;
-import frc.robot.commands.autos.AutonChargeStationCommand;
+import frc.robot.commands.TurnCommandNew;
 import frc.robot.commands.autos.AutonChargeStationCommand2;
 import frc.robot.commands.autos.AutonOneCommand;
 import frc.robot.commands.autos.AutonThreeCommand;
 import frc.robot.subsystems.ArmSubsystem;
-import frc.robot.subsystems.DistanceSensorSubsystem;
 import frc.robot.subsystems.ExtenderSubsystem;
 import frc.robot.subsystems.GripperSubsystem;
 import frc.robot.subsystems.LEDSubsystem;
 import frc.robot.subsystems.LimelightSubsystem;
 import frc.robot.subsystems.Swerve;
-import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Joystick;
-import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -41,7 +36,7 @@ public class RobotContainer {
     public final LimelightSubsystem m_limelightSubsystem = new LimelightSubsystem();
     private final GripperSubsystem m_gripperSubsystem = new GripperSubsystem();
     private final LEDSubsystem m_ledSubsystem = new LEDSubsystem();
-    private final DistanceSensorSubsystem m_DistanceSensorSubsystem = new DistanceSensorSubsystem();
+    //private final DistanceSensorSubsystem m_distanceSensorSubsystem = new DistanceSensorSubsystem();
     private final Joystick driverStick = new Joystick(0);
     private final Joystick controlStick = new Joystick(1);
     private String mode = "cube";
@@ -64,9 +59,10 @@ public class RobotContainer {
         );
         
         m_chooser.setDefaultOption("Auton 1 (Main)", new AutonOneCommand(m_swerve, m_armSubsystem, m_extenderSubsystem, m_gripperSubsystem, m_limelightSubsystem));
-        m_chooser.addOption("Auton 2 Charge Station", new AutonChargeStationCommand(m_swerve, m_armSubsystem, m_extenderSubsystem, m_gripperSubsystem, m_limelightSubsystem));
+        //m_chooser.addOption("Auton 2 Charge Station", new AutonChargeStationCommand(m_swerve, m_armSubsystem, m_extenderSubsystem, m_gripperSubsystem, m_limelightSubsystem));
+        m_chooser.addOption("Auton 2 Charge Station)", new AutonChargeStationCommand2(m_swerve, m_armSubsystem, m_extenderSubsystem, m_gripperSubsystem, m_limelightSubsystem));
         m_chooser.addOption("Auton 3", new AutonThreeCommand(m_swerve, m_armSubsystem, m_extenderSubsystem, m_gripperSubsystem, m_limelightSubsystem));
-        m_chooser.addOption("Auton 2 Charge Station 2", new AutonChargeStationCommand2(m_swerve, m_armSubsystem, m_extenderSubsystem, m_gripperSubsystem, m_limelightSubsystem));
+        m_chooser.addOption("Turn (You realy just want to turn?)", new TurnCommandNew(m_swerve, 0));
 
         SmartDashboard.putData(m_chooser);
 
@@ -89,7 +85,6 @@ public class RobotContainer {
         new JoystickButton(controlStick, 8).whileTrue(new RunCommand(() -> m_armSubsystem.raise())).onFalse(new InstantCommand(() -> m_armSubsystem.stop()));
 
         //new JoystickButton(controlStick, 10).whileTrue(new RunCommand(() -> m_armSubsystem.lower())).onFalse(new InstantCommand(() -> m_armSubsystem.stop()));
-        new JoystickButton(controlStick, 10).onTrue(new InstantCommand(() -> m_armSubsystem.setSetpoint(14.89)));
 
 
         // SET LOW
@@ -100,7 +95,7 @@ public class RobotContainer {
             new InstantCommand(() -> m_gripperSubsystem.setSetpoint(20)),
             new InstantCommand(() -> m_armSubsystem.setSetpoint(Constants.ArmConstants.minAngle)),
             new WaitUntilCommand(() -> m_armSubsystem.atSetpoint()),
-            new InstantCommand(() -> m_gripperSubsystem.setSetpoint(Constants.Gripper.fullOpen))
+            new InstantCommand(() -> m_gripperSubsystem.setSetpoint(Constants.GripperConstants.fullOpen))
         ));
 
         // SET MID
@@ -133,9 +128,15 @@ public class RobotContainer {
             new InstantCommand(() ->  m_extenderSubsystem.setSetpoint(0)),
             new WaitCommand(0.1),
             new WaitUntilCommand(() -> m_extenderSubsystem.atSetpoint()),
-            new InstantCommand(() -> m_armSubsystem.setSetpoint(-35.0)),
-            new WaitUntilCommand(() -> m_armSubsystem.atSetpoint())
+            new InstantCommand(() -> m_armSubsystem.setSetpoint(-35.0))
         ));
+
+        // SET MID FOR SHELF
+        new JoystickButton(controlStick, 10).onTrue(new SequentialCommandGroup(
+            new InstantCommand(() -> m_armSubsystem.setSetpoint(14.89)),
+            new InstantCommand(() ->  m_extenderSubsystem.setSetpoint(0))
+        ));
+
 
 
         // GRIPPER
@@ -143,15 +144,15 @@ public class RobotContainer {
 
         new JoystickButton(driverStick, 3).whileTrue(
             new ConditionalCommand(
-                new InstantCommand(() -> m_gripperSubsystem.setSetpoint(Constants.Gripper.fullOpen)),
-                new InstantCommand(() -> m_gripperSubsystem.setSetpoint(Constants.Gripper.fullOpenWhenExtended)),
+                new InstantCommand(() -> m_gripperSubsystem.setSetpoint(Constants.GripperConstants.fullOpen)),
+                new InstantCommand(() -> m_gripperSubsystem.setSetpoint(Constants.GripperConstants.fullOpenWhenExtended)),
                 ()->m_armSubsystem.getDegrees() < -10.0
             )
         );
 
-        new JoystickButton(driverStick, 2).onTrue(new InstantCommand(() -> m_gripperSubsystem.setSetpoint(Constants.Gripper.closeCone)));
+        new JoystickButton(driverStick, 2).onTrue(new InstantCommand(() -> m_gripperSubsystem.setSetpoint(Constants.GripperConstants.closeCone)));
 
-        new JoystickButton(driverStick, 4).onTrue(new InstantCommand(() -> m_gripperSubsystem.setSetpoint(Constants.Gripper.closeCube)));
+        new JoystickButton(driverStick, 4).onTrue(new InstantCommand(() -> m_gripperSubsystem.setSetpoint(Constants.GripperConstants.closeCube)));
 
 
 
@@ -195,6 +196,11 @@ public class RobotContainer {
             () -> driveInversionMultiplier(),
             false
         ));
+
+        new POVButton(controlStick, 0).whileTrue(new RunCommand(() -> m_armSubsystem.raise()));
+
+        new POVButton(controlStick, 180).whileTrue(new RunCommand(() -> m_armSubsystem.lower()));
+
     }
 
     public Double driveInversionMultiplier() {

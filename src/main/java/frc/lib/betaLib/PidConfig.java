@@ -4,7 +4,6 @@
 
 package frc.lib.betaLib;
 
-import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 public class PidConfig {
@@ -49,7 +48,7 @@ public class PidConfig {
         this.maxAcceleration = maxAcceleration;
         this.isTunable = isTunable;
 
-        if(isTunable) {
+        if(this.isTunable) {
             SmartDashboard.putNumber(key + " kp", kP);
             SmartDashboard.putNumber(key + " ki", kI);
             SmartDashboard.putNumber(key + " kd", kD);
@@ -101,14 +100,23 @@ public class PidConfig {
     }
 
     public double getKp() {
+        if(this.kP == null) {
+            return 0.0;
+        }
         return this.kP;
     }
 
     public double getKi() {
+        if(this.kI == null) {
+            return 0.0;
+        }
         return this.kI;
     }
 
     public double getKd() {
+        if(this.kD == null) {
+            return 0.0;
+        }
         return this.kD;
     }
 

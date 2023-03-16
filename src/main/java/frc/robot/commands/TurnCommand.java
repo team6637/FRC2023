@@ -6,67 +6,77 @@ package frc.robot.commands;
 
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import frc.robot.Constants;
 import frc.robot.subsystems.Swerve;
 
 public class TurnCommand extends CommandBase {
-  Swerve swerve;
-  double setpoint;
-  double kp = 0.025; //0.019
-  double error;
-  int timer = 0;
 
-  public TurnCommand(Swerve swerve, double setpoint) {
-    this.swerve = swerve;
-    this.setpoint = setpoint;
-    addRequirements(swerve);
-  }
+//   Swerve swerve;
 
-  @Override
-  public void initialize() {
-    timer = 0;
-  }
+//   int timer = 0;
+//   private double setpoint;
+//   private double error;
+//   private double currentAngle;
+//   private double output;
+//   private double kp = 0.025; //0.019
 
-  // Called every time the scheduler runs while the command is scheduled.
-  @Override
-  public void execute() {
-    double currentAngle = swerve.getPose().getRotation().getDegrees();
+//   public TurnCommand(Swerve swerve, double setpoint) {
+//     this.swerve = swerve;
+//     this.setpoint = setpoint;
+//     addRequirements(swerve);
+//   }
 
-    if(currentAngle > -180.0 && currentAngle < -90.0) {
-      currentAngle = currentAngle + 360.0;
-    }
+//   @Override
+//   public void initialize() {
+//     if (Constants.CommandConstants.turnIsTunible) {
+//       //SmartDashboard.putNumber("turn command kp", kp);
+//     }
+//     timer = 0;
+//   }
 
-    error = setpoint - currentAngle;
+//   // Called every time the scheduler runs while the command is scheduled.
+//   @Override
+//   public void execute() {
+//     currentAngle = swerve.getPose().getRotation().getDegrees();
 
-    if(Math.abs(error) < 2.0) timer++;
+//     if(currentAngle > -180.0 && currentAngle < -90.0) {
+//       currentAngle = currentAngle + 360.0;
+//     }
 
-    double output = kp * error;
+//     error = setpoint - currentAngle;
 
-    if (Math.abs(output) > 0.29) {
-      output = 0.29 * Math.signum(output);
-    }
+//     if(Math.abs(error) < 2.0) timer++;
 
-    output = output * Constants.Swerve.maxAngularVelocity;
+//     output = kp * error;
 
-    SmartDashboard.putNumber("turn command final output", output);
-    SmartDashboard.putNumber("turn command timer", timer);
+//     if (Math.abs(output) > 0.29) {
+//       output = 0.29 * Math.signum(output);
+//     }
 
-    ChassisSpeeds chassisSpeeds = new ChassisSpeeds(0.0, 0.0, output);
-    SwerveModuleState[] moduleStates = Constants.Swerve.swerveKinematics.toSwerveModuleStates(chassisSpeeds);
-    swerve.setModuleStates(moduleStates);
-  }
+//     output = output * Constants.Swerve.maxAngularVelocity;
 
-  // Called once the command ends or is interrupted.
-  @Override
-  public void end(boolean interrupted) {
-    swerve.stopModules();
-  }
+//     // if (Constants.CommandConstants.turnIsTunible) {
+//     //   SmartDashboard.putNumber("turn command final output", output);
+//     //   SmartDashboard.putNumber("turn command timer", timer);
 
-  // Returns true when the command should end.
-  @Override
-  public boolean isFinished() {
-    return timer > 50;
-  }
-}
+//     //   kp = SmartDashboard.getNumber("turn command kp", kp);
+//     // }
+
+//     ChassisSpeeds chassisSpeeds = new ChassisSpeeds(0.0, 0.0, output);
+//     SwerveModuleState[] moduleStates = Constants.Swerve.swerveKinematics.toSwerveModuleStates(chassisSpeeds);
+//     swerve.setModuleStates(moduleStates);
+//   }
+
+//   // Called once the command ends or is interrupted.
+//   @Override
+//   public void end(boolean interrupted) {
+//     swerve.stopModules();
+//   }
+
+//   // Returns true when the command should end.
+//   @Override
+//   public boolean isFinished() {
+//     return timer > 50;
+//   }
+ }

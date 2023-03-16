@@ -9,6 +9,7 @@ import com.revrobotics.Rev2mDistanceSensor.Port;
 
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Constants;
 
 public class DistanceSensorSubsystem extends SubsystemBase {
   
@@ -27,6 +28,8 @@ public class DistanceSensorSubsystem extends SubsystemBase {
 
   @Override
   public void periodic() {
-    SmartDashboard.putNumber("sensor range", getSensorValue());
+    if(Constants.DistanceSensorConstants.isTunable) {
+      SmartDashboard.putNumber("sensor range", getSensorValue());
+    }
   }
 }

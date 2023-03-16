@@ -7,6 +7,7 @@ package frc.robot.subsystems;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 
+import frc.lib.betaLib.PidConfig;
 import frc.robot.Constants;
 import frc.robot.Constants.ArmConstants;
 import edu.wpi.first.math.controller.PIDController;
@@ -19,18 +20,18 @@ public class ArmSubsystem extends SubsystemBase {
   private final CANSparkMax rightMotor = new CANSparkMax(ArmConstants.RIGHT_ARM_PORT, MotorType.kBrushless);
   private final DutyCycleEncoder throughboreEncoder = new DutyCycleEncoder(0);
 
-  private final double maxAngle = Constants.ArmConstants.maxAngle;
-  private final double minAngle = Constants.ArmConstants.minAngle;
-  private final double angleOffset = 110.7;
   private double kp = 0.01;
   private double minPowerAtLevel = 0.025;
   private double minPowerAtExtended = 0.03;
-  private final PIDController pid = new PIDController(kp, 0.0, 0.0);
-  private double setpoint = minAngle;
+  private double setpoint = Constants.ArmConstants.minAngle;
   private double setpointIncrementer = 0.5;
   private double motorOutput = 0.0;
   private double maxPIDSpeed = 0.3;
   private double downSpeed = -0.2;
+  private double speed;
+
+  private final PidConfig pidConfig = new PidConfig("arm", kp, Constants.ArmConstants.isTunable);
+  private final PIDController pid = new PIDController(pidConfig.getKp(), pidConfig.getKi(), pidConfig.getKd());
   private final ExtenderSubsystem extenderSubsystemReference;
 
   // Settings
@@ -44,13 +45,13 @@ public class ArmSubsystem extends SubsystemBase {
     leftMotor.setInverted(false);
     rightMotor.follow(leftMotor, true);
 
+    setSetpoint(Constants.ArmConstants.minAngle);
+    
     if (Constants.ArmConstants.isTunable) {
       SmartDashboard.putNumber("arm min power to hold level", minPowerAtLevel);
-      SmartDashboard.putNumber("arm kp", kp);
       SmartDashboard.putNumber("arm setpoint", setpoint);
       SmartDashboard.putNumber("down speed", downSpeed);
     }
-    setSetpoint(minAngle);
   }
 
   public void raise() {
@@ -88,9 +89,11 @@ public class ArmSubsystem extends SubsystemBase {
   }
 
   public double getPidOutput() {
-    double speed = pid.calculate(getDegrees(), setpoint) + getFeedForward();
+    speed = pid.calculate(getDegrees(), setpoint) + getFeedForward();
     if (setpoint + 10 < getDegrees()) {
-      downSpeed = SmartDashboard.getNumber("down speed", downSpeed);
+      if (Constants.ArmConstants.isTunable) {
+        downSpeed = SmartDashboard.getNumber("down speed", downSpeed);
+      }
       return downSpeed;
     }
     if (speed >= maxPIDSpeed) {
@@ -100,14 +103,14 @@ public class ArmSubsystem extends SubsystemBase {
   }
 
   public double getDegrees() {
-    return (throughboreEncoder.getAbsolutePosition() -0.5)*-1.0*360.0 - angleOffset;
+    return (throughboreEncoder.getAbsolutePosition() -0.5)*-1.0*360.0 - Constants.ArmConstants.angleOffset;
   }
 
   public void setSetpoint(double newSetpoint) {
-    if (newSetpoint > maxAngle) {
-      setpoint = maxAngle;
-    } else if (newSetpoint < minAngle) {
-      setpoint = minAngle;
+    if (newSetpoint > Constants.ArmConstants.maxAngle) {
+      setpoint = Constants.ArmConstants.maxAngle;
+    } else if (newSetpoint < Constants.ArmConstants.minAngle) {
+      setpoint = Constants.ArmConstants.minAngle;
     } else {
       setpoint = newSetpoint;
     }
@@ -121,23 +124,23 @@ public class ArmSubsystem extends SubsystemBase {
   public void periodic() {
     if (Constants.ArmConstants.isTunable) {
       SmartDashboard.putNumber("arm throughbore encoder value", getDegrees());
-      SmartDashboard.putBoolean("arm within range up", getDegrees() >= maxAngle);
-      SmartDashboard.putBoolean("arm within range down", getDegrees() <= minAngle);
+      SmartDashboard.putBoolean("arm within range up", getDegrees() >= Constants.ArmConstants.maxAngle);
+      SmartDashboard.putBoolean("arm within range down", getDegrees() <= Constants.ArmConstants.minAngle);
       SmartDashboard.putNumber("arm power output", getPidOutput());
       SmartDashboard.putNumber("arm feed forward", getFeedForward());
       SmartDashboard.putNumber("arm Math.cos*getdegrees", Math.cos(Math.toRadians(getDegrees())));
-      minPowerAtLevel = SmartDashboard.getNumber("arm min power to hold level", minPowerAtLevel);
-      kp = SmartDashboard.getNumber("arm kp", kp);
-      pid.setP(kp);
       SmartDashboard.putNumber("arm position error", pid.getPositionError());
       SmartDashboard.putNumber("arm min power", getMinPower());
+
+      minPowerAtLevel = SmartDashboard.getNumber("arm min power to hold level", minPowerAtLevel);
+      pidConfig.updateFromSmartDashboard();
     }
 
     if (usingPID) {
       leftMotor.set(getPidOutput());
     } else {
-      if (getDegrees() >= maxAngle) motorOutput = 0.0;
-      if (getDegrees() <= minAngle) motorOutput = 0.0;
+      if (getDegrees() >= Constants.ArmConstants.maxAngle) motorOutput = 0.0;
+      if (getDegrees() <= Constants.ArmConstants.minAngle) motorOutput = 0.0;
       if (settingMinLevel) motorOutput = minPowerAtLevel;
       leftMotor.set(motorOutput);
     }

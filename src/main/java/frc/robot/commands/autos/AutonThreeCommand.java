@@ -5,11 +5,8 @@
 package frc.robot.commands.autos;
 
 import edu.wpi.first.math.controller.PIDController;
-import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
-import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
-import edu.wpi.first.wpilibj2.command.ParallelRaceGroup;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
@@ -30,10 +27,9 @@ import com.pathplanner.lib.commands.PPSwerveControllerCommand;
 // information, see:
 // https://docs.wpilib.org/en/stable/docs/software/commandbased/convenience-features.html
 public class AutonThreeCommand extends SequentialCommandGroup {
-  /** Creates a new Auton3Command. */
+
   public AutonThreeCommand(Swerve swerve, ArmSubsystem arm, ExtenderSubsystem extender, GripperSubsystem gripper, LimelightSubsystem vision) {
 
-    
     // DRIVE TO OBJECT
     PathPlannerTrajectory trajectory1 = PathPlanner.loadPath("auton3", Constants.Swerve.maxSpeed, Constants.Swerve.maxAccelerationMetersPerSecond);
 
@@ -56,7 +52,7 @@ public class AutonThreeCommand extends SequentialCommandGroup {
         new InstantCommand(() -> swerve.resetOdometryForState(trajectory1.getInitialState(),  new Rotation2d(Math.toRadians(180.0)))),
 
         // LIFT ARM
-        new InstantCommand(() -> gripper.setSetpoint(Constants.Gripper.closeCube)),
+        new InstantCommand(() -> gripper.setSetpoint(Constants.GripperConstants.closeCube)),
         new InstantCommand(() ->  arm.setSetpoint(14.0)),
         new WaitCommand(0.1),
         new WaitUntilCommand(() -> arm.atSetpoint()),
@@ -67,7 +63,7 @@ public class AutonThreeCommand extends SequentialCommandGroup {
 
         // DROP OBJECT
         new WaitUntilCommand(() -> extender.atSetpoint()),
-        new InstantCommand(() -> gripper.autonSetSetpoint(Constants.Gripper.fullOpenWhenExtended)),
+        new InstantCommand(() -> gripper.autonSetSetpoint(Constants.GripperConstants.fullOpenWhenExtended)),
         new WaitCommand(0.5),
 
         // DRIVE BACK
@@ -81,9 +77,9 @@ public class AutonThreeCommand extends SequentialCommandGroup {
         new InstantCommand(() -> arm.setSetpoint(Constants.ArmConstants.minAngle)),
         new WaitCommand(0.1),
         new WaitUntilCommand(() -> arm.atSetpoint()),
-        new InstantCommand(() -> gripper.setSetpoint(Constants.Gripper.fullOpen)),
+        new InstantCommand(() -> gripper.setSetpoint(Constants.GripperConstants.fullOpen)),
 
-        new TurnCommand(swerve, 0.0).withTimeout(3.0),
+        //new TurnCommand(swerve, 0.0).withTimeout(3.0),
 
         // DRIVE TO OBJECT
         swerveControllerCommand1,

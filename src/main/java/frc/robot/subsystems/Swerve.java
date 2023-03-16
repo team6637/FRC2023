@@ -136,16 +136,16 @@ public class Swerve extends SubsystemBase {
   @Override
   public void periodic() {
     if(Constants.Swerve.isTunable) {
-    SmartDashboard.putNumber("swerve heading", getHeading());
-    SmartDashboard.putNumber("fl abs angle", frontLeft.getAbsoluteEncoderDegrees());
-    SmartDashboard.putNumber("fr abs angle", frontRight.getAbsoluteEncoderDegrees());
-    SmartDashboard.putNumber("fr adjusted angle", frontRight.getAbsoluteEncoderRadians());
-    SmartDashboard.putNumber("bl abs angle", backLeft.getAbsoluteEncoderDegrees());
-    SmartDashboard.putNumber("bl adjusted angle", backLeft.getAbsoluteEncoderRadians());
-    SmartDashboard.putNumber("br abs angle", backRight.getAbsoluteEncoderDegrees());
-    SmartDashboard.putNumber("gyro roll", getRoll());
+      SmartDashboard.putNumber("swerve heading", getHeading());
+      SmartDashboard.putNumber("fl abs angle", frontLeft.getAbsoluteEncoderDegrees());
+      SmartDashboard.putNumber("fr abs angle", frontRight.getAbsoluteEncoderDegrees());
+      SmartDashboard.putNumber("fr adjusted angle", frontRight.getAbsoluteEncoderRadians());
+      SmartDashboard.putNumber("bl abs angle", backLeft.getAbsoluteEncoderDegrees());
+      SmartDashboard.putNumber("bl adjusted angle", backLeft.getAbsoluteEncoderRadians());
+      SmartDashboard.putNumber("br abs angle", backRight.getAbsoluteEncoderDegrees());
+      SmartDashboard.putNumber("gyro roll", getRoll());
 
-    SmartDashboard.putNumber("drive distance in meters", frontLeft.getDrivePositionMeters());
+      SmartDashboard.putNumber("drive distance in meters", frontLeft.getDrivePositionMeters());
     }
 
     odometry.update(getGyroscopeRotation(), getPositions());

@@ -16,6 +16,7 @@ public class LimelightSubsystem extends SubsystemBase {
 	
 	private final NetworkTable table;
 	private final Servo servo;
+
 	private double kp = 0.05;
 	private boolean visionActive = false;
 	private final double servoUpPosition = 0.72;
@@ -28,10 +29,11 @@ public class LimelightSubsystem extends SubsystemBase {
 		servo.set(servoUpPosition);
 
 		setVisionMode("off");
-
-		SmartDashboard.putNumber("ll kp", kp);
 		setStream(2);
 
+		if(Constants.LimeLightConstants.isTunable) {
+			SmartDashboard.putNumber("limelight kp", kp);
+		}
 	}
 
 	public void servoUp() {
@@ -138,6 +140,10 @@ public class LimelightSubsystem extends SubsystemBase {
 
 	@Override
 	public void periodic() {
-		SmartDashboard.putNumber("ll get tx", getTx());
+		if(Constants.LimeLightConstants.isTunable) {
+			SmartDashboard.putNumber("limelight get tx", getTx());
+
+			kp = SmartDashboard.getNumber("limelight kp", kp);
+		}
 	}
 }
