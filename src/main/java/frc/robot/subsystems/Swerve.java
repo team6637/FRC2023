@@ -135,8 +135,11 @@ public class Swerve extends SubsystemBase {
 
   @Override
   public void periodic() {
+    SmartDashboard.putNumber("swerve heading", getHeading());
+    SmartDashboard.putNumber("swerve pose heading", getPose().getRotation().getDegrees());
+
+
     if(Constants.Swerve.isTunable) {
-      SmartDashboard.putNumber("swerve heading", getHeading());
       SmartDashboard.putNumber("fl abs angle", frontLeft.getAbsoluteEncoderDegrees());
       SmartDashboard.putNumber("fr abs angle", frontRight.getAbsoluteEncoderDegrees());
       SmartDashboard.putNumber("fr adjusted angle", frontRight.getAbsoluteEncoderRadians());

@@ -58,11 +58,12 @@ public class RobotContainer {
             )
         );
         
-        m_chooser.setDefaultOption("Auton 1 (Main)", new AutonOneCommand(m_swerve, m_armSubsystem, m_extenderSubsystem, m_gripperSubsystem, m_limelightSubsystem));
+        m_chooser.setDefaultOption("Default (does nothing)", new InstantCommand());
+        m_chooser.addOption("Auton 1 (Main)", new AutonOneCommand(m_swerve, m_armSubsystem, m_extenderSubsystem, m_gripperSubsystem, m_limelightSubsystem));
         //m_chooser.addOption("Auton 2 Charge Station", new AutonChargeStationCommand(m_swerve, m_armSubsystem, m_extenderSubsystem, m_gripperSubsystem, m_limelightSubsystem));
         m_chooser.addOption("Auton 2 Charge Station)", new AutonChargeStationCommand2(m_swerve, m_armSubsystem, m_extenderSubsystem, m_gripperSubsystem, m_limelightSubsystem));
         m_chooser.addOption("Auton 3", new AutonThreeCommand(m_swerve, m_armSubsystem, m_extenderSubsystem, m_gripperSubsystem, m_limelightSubsystem));
-        m_chooser.addOption("Turn (You realy just want to turn?)", new TurnCommandNew(m_swerve, 0));
+        m_chooser.addOption("Turn (You realy just want to turn?)", new TurnCommandNew(m_swerve, 180));
 
         SmartDashboard.putData(m_chooser);
 

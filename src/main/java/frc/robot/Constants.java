@@ -23,7 +23,7 @@ public final class Constants {
         public static final int RIGHT_ARM_PORT = 39;
         public static final int ENCODER_PORT = 0;
 
-        public static final double minAngle = -62.0;
+        public static final double minAngle = -60.0;
         public static final double maxAngle = 40.0;
 
         public static final double angleOffset = 110.7;
@@ -78,7 +78,7 @@ public final class Constants {
 
         public static final boolean driveStraightIsTunible = false;
 
-        public static final boolean turnIsTunible = true;
+        public static final boolean turnIsTunable = false;
     }
 
     // SWERVE
@@ -131,9 +131,9 @@ public final class Constants {
     
         /* Drive Motor Characterization Values 
          * Divide SYSID values by 12 to convert from volts to percent output for CTRE */
-        public static final double driveKS = (0.32 / 12); //TODO: This must be tuned to specific robot
-        public static final double driveKV = (1.51 / 12);
-        public static final double driveKA = (0.27 / 12);
+        public static final double driveKS = (0.13923 / 12); //TODO: This must be tuned to specific robot
+        public static final double driveKV = (2.5957 / 12);
+        public static final double driveKA = (0.73919 / 12);
     
         public static final double driveGearRatio = chosenModule.driveGearRatio;
         public static final int driveContinuousCurrentLimit = 35;

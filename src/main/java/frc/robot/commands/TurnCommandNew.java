@@ -4,11 +4,11 @@
 
 package frc.robot.commands;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
-import edu.wpi.first.math.controller.ProfiledPIDController;
+import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
-import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import frc.lib.betaLib.PidConfig;
@@ -21,16 +21,15 @@ public class TurnCommandNew extends CommandBase {
 
   private double setpoint;
   private double currentAngle;
-  private double output;
-  private double tolerance = 3;
+  private double output, pidOutput, ffOutput;
+  private double tolerance = 2;
   private double velocityTolerance = 6;
-  private double maxVelocity = 5.0;
-  private double maxAcceleration = 2.0;
 
-  PidConfig pidConfig = new PidConfig("turn command", 0.025, 0.0, 0.0, 2.0, 4.0, Constants.CommandConstants.turnIsTunible);
+  private SimpleMotorFeedforward feedforward = new SimpleMotorFeedforward(Constants.Swerve.driveKS, Constants.Swerve.driveKV, Constants.Swerve.driveKA);
 
-  // TODO CHANGE TO PROFILED PID
-  ProfiledPIDController pid = new ProfiledPIDController(pidConfig.getKp(), pidConfig.getKi(), pidConfig.getKd(), new TrapezoidProfile.Constraints(pidConfig.getMaxVelocity(), pidConfig.getMaxAcceleration()));
+  PidConfig pidConfig = new PidConfig("turn command", 0.01, 0.0, 0.0, Constants.CommandConstants.turnIsTunable);
+
+  PIDController pid = new PIDController(pidConfig.getKp(), pidConfig.getKi(), pidConfig.getKd());
 
   public TurnCommandNew(Swerve swerve, double setpoint) {
     this.swerve = swerve;
@@ -40,47 +39,31 @@ public class TurnCommandNew extends CommandBase {
 
   @Override
   public void initialize() {
-    pid.setTolerance(tolerance, velocityTolerance);
     pid.enableContinuousInput(-180, 180);
-    if(Constants.CommandConstants.turnIsTunible) {
-      tolerance = SmartDashboard.getNumber("turn command tolerance", tolerance);
-      velocityTolerance = SmartDashboard.getNumber("turn command velocity tolerance", velocityTolerance);
-      setpoint = SmartDashboard.getNumber("turn command setpoint", setpoint);
-      maxVelocity = SmartDashboard.getNumber("turn command max velocity", maxVelocity);
-      maxAcceleration = SmartDashboard.getNumber("turn command max acceleration", maxAcceleration);
-
-      SmartDashboard.putNumber("turn command tolerance", tolerance);
-      SmartDashboard.putNumber("turn command velocity tolerance", velocityTolerance);
-      SmartDashboard.putNumber("turn command setpoint", setpoint);
-      SmartDashboard.putNumber("turn command max velocity", maxVelocity);
-      SmartDashboard.putNumber("turn command max acceleration", maxAcceleration);
-    }
+    pid.setTolerance(tolerance, velocityTolerance);
   }
 
   @Override
   public void execute() {
-    pidConfig.updateFromSmartDashboard();
-    if(Constants.CommandConstants.turnIsTunible) {
-      SmartDashboard.putBoolean("turn command pid is at setpoint", pid.atSetpoint());
-
-      tolerance = SmartDashboard.getNumber("turn command tolerance", tolerance);
-      velocityTolerance = SmartDashboard.getNumber("turn command velocity tolerance", velocityTolerance);
-      setpoint = SmartDashboard.getNumber("turn command setpoint", setpoint);
-      maxVelocity = SmartDashboard.getNumber("turn command max velocity", maxVelocity);
-      maxAcceleration = SmartDashboard.getNumber("turn command max acceleration", maxAcceleration);
-      
-      pid.setP(pidConfig.getKp());
-      pid.setTolerance(tolerance, velocityTolerance);
-    }
 
     currentAngle = swerve.getPose().getRotation().getDegrees();
-    output = pid.calculate(currentAngle, setpoint);
+
+    pidOutput = pid.calculate(currentAngle, setpoint);
+
+    pidOutput = MathUtil.clamp(pidOutput, -0.4, 0.4);
+
+    ffOutput = feedforward.calculate(output * Constants.Swerve.maxSpeed);
+
+    output *= Constants.Swerve.maxAngularVelocity;
+    output = output + ffOutput;
 
     ChassisSpeeds chassisSpeeds = new ChassisSpeeds(0.0, 0.0, output);
     SwerveModuleState[] moduleStates = Constants.Swerve.swerveKinematics.toSwerveModuleStates(chassisSpeeds);
     swerve.setModuleStates(moduleStates);
 
-
+    SmartDashboard.putBoolean("turn command at setpoint", pid.atSetpoint());
+    SmartDashboard.putNumber("turn command pid output", output);
+    SmartDashboard.putNumber("turn command error", pid.getPositionError());
   }
 
   @Override

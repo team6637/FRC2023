@@ -122,8 +122,11 @@ public class ArmSubsystem extends SubsystemBase {
   
   @Override
   public void periodic() {
+    // always show these whether tunable or not
+    SmartDashboard.putNumber("arm throughbore encoder value", getDegrees());
+    SmartDashboard.putNumber("arm setpoint", setpoint);
+
     if (Constants.ArmConstants.isTunable) {
-      SmartDashboard.putNumber("arm throughbore encoder value", getDegrees());
       SmartDashboard.putBoolean("arm within range up", getDegrees() >= Constants.ArmConstants.maxAngle);
       SmartDashboard.putBoolean("arm within range down", getDegrees() <= Constants.ArmConstants.minAngle);
       SmartDashboard.putNumber("arm power output", getPidOutput());
