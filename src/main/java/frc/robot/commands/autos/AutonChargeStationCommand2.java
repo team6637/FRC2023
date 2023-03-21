@@ -65,8 +65,10 @@ public class AutonChargeStationCommand2 extends SequentialCommandGroup {
                 )
             ),
 
+            // DRIVE UNTIL PLATFORM GOES PAST LEVEL
             new AutoLevelCommand(swerve),
 
+            // DRIVE BACK SET DISTANCE IN METERS (.3M = 1 FT)
             new DriveStraightCommand(swerve, -0.19, true, -0.1),
 
             new TurnWheelsCommand(swerve)

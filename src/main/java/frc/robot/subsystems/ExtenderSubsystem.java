@@ -24,8 +24,7 @@ public class ExtenderSubsystem extends SubsystemBase {
   private double setpoint = minSetpoint;
   private double kp = 0.07;
   private boolean usingPID = true;
-  private double setpointIncrementer = 0.8;
-
+  private double setpointIncrementer = 1.0;
   private final PidConfig PidConfig = new PidConfig("extender", kp, Constants.ExtenderConstants.isTunable);
   private final PIDController pid = new PIDController(PidConfig.getKp(), PidConfig.getKi(), PidConfig.getKd());
 
